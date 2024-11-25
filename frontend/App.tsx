@@ -43,6 +43,10 @@ const router = createBrowserRouter([
         path: "my-assets",
         element: <MyFungibleAssets />,
       },
+      {
+        path: "stake",
+        element: <MyFungibleAssets />,
+      },
     ],
   },
 ]);

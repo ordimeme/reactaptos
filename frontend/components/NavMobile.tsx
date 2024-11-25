@@ -12,7 +12,6 @@ const NavMobile = ({ isOpen, toggleMenu}: NavMobileProps) => {
 const links = [
         { to: '/markets', label: 'Markets' },
         { to: '/mint', label: 'Mint' },
-        { to: '/create-asset', label: 'Create' },
         { to: '/stake', label: 'Stake' },
         { to: '/my-assets', label: 'MyAssets' },
       ];

@@ -1,6 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
 // Internal components
-import { LaunchpadHeader } from "@/components/LaunchpadHeader";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 // Internal hooks
 import { useGetAssetMetadata } from "@/hooks/useGetAssetMetadata";
@@ -16,7 +15,6 @@ export function MyFungibleAssets() {
 
   return (
     <>
-      <LaunchpadHeader title="My Assets" />
       <Table className="max-w-screen-xl mx-auto">
         {!fas.length && <TableCaption>A list of the fungible assets created under the current contract.</TableCaption>}
         <TableHeader>

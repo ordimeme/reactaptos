@@ -30,7 +30,7 @@ export const HeroSection: React.FC<HeroSectionProps> = () => {
   const { data } = useGetAssetData();
   const queryClient = useQueryClient();
   const { account, signAndSubmitTransaction } = useWallet();
-  const [assetCount, setAssetCount] = useState<string>("1");
+  const [assetCount, setAssetCount] = useState<string>("10000");
   const [error, setError] = useState<string | null>(null);
 
   const { asset, userMintBalance = 0, yourBalance = 0, maxSupply = 0, currentSupply = 0 } = data ?? {};
@@ -72,8 +72,7 @@ export const HeroSection: React.FC<HeroSectionProps> = () => {
     <section className="hero-container flex flex-col md:flex-row gap-6 px-4 max-w-screen-xl mx-auto w-full">
       <Image
         src={asset?.icon_uri ?? Placeholder1}
-        rounded="full"
-        className="basis-1/5 aspect-square object-cover self-center max-w-[300px]"
+        className=" bg-[#FF4433] basis-1/5 aspect-square object-cover self-center max-w-[300px]"
       />
       <div className="basis-4/5 flex flex-col gap-4">
         <h1 className="title-md">{asset?.name ?? config.defaultAsset?.name}</h1>

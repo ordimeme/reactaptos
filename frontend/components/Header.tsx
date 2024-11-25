@@ -46,21 +46,23 @@ export function Header() {
       </div>
 
       <div className="hidden lg:flex flex-1 items-center">
-        {IS_DEV && (
-          <>
-          <Link className={buttonVariants({ variant: "link" })} to={"/markets"}>
-          Market
+
+        <Link className={buttonVariants({ variant: "link" })} to={"/markets"}>
+            Market
         </Link>
-            <Link className={buttonVariants({ variant: "link" })} to={"/mint"}>
-              Mint
-            </Link>
-            <Link className={buttonVariants({ variant: "link" })} to={"/create-asset"}>
-              Create
-            </Link>
-            <Link className={buttonVariants({ variant: "link" })} to={"/my-assets"}>
-              MyAssets
-            </Link>
-          </>
+        <Link className={buttonVariants({ variant: "link" })} to={"/mint"}>
+            Mint
+        </Link>
+        <Link className={buttonVariants({ variant: "link" })} to={"/my-assets"}>
+            MyAssets
+        </Link>
+        <Link className={buttonVariants({ variant: "link" })} to={"/stake"}>
+            Stake
+        </Link>
+        {IS_DEV && (
+        <Link className={buttonVariants({ variant: "link" })} to={"/create-asset"}>
+            Create
+        </Link>
         )}
     </div>
     <div className="flex gap-1 lg:gap-4">
