@@ -19,7 +19,7 @@ export function Header() {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   // const [selectedNetwork, setSelectedNetwork] = useState("Aptos")
-  const [selectedNetwork, setSelectedNetwork] = useState("Aptos")
+  const [selectedNetwork, setSelectedNetwork] = useState("Move")
   const { theme } = useContext(ThemeContext);
 
   const toggleMenu = () => {
@@ -76,8 +76,8 @@ export function Header() {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem value="Aptos">Aptos</SelectItem>
-                <SelectItem value="Sui">Sui</SelectItem>
+                <SelectItem value="Solana">Solana</SelectItem>
+                <SelectItem value="Move">Move</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>

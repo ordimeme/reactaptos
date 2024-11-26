@@ -34,7 +34,7 @@ export function MyFungibleAssets() {
                 <TableRow key={fa.asset_type}>
                   <TableCell className="font-medium">
                     <div className="flex items-center">
-                      <img src={fa.icon_uri ?? ""} style={{ width: "40px" }} className="mr-2"></img>
+                      <img src={fa.icon_uri ?? ""} style={{ width: "40px" }} className="bg-gray-400 mr-2"></img>
                       <span>{fa.symbol}</span>
                     </div>
                   </TableCell>

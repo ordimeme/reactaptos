@@ -4,6 +4,7 @@ import { Mint } from "@/pages/Mint";
 import Markets from "./pages/MarketsPage";
 import { Header } from "./components/Header";
 import Footer from "./components/Footer";
+import { Stake } from "@/pages/Stake"
 import { CreateFungibleAsset } from "@/pages/CreateFungibleAsset";
 import { MyFungibleAssets } from "@/pages/MyFungibleAssets";
 // import { TopBanner } from "./components/TopBanner";
@@ -45,7 +46,7 @@ const router = createBrowserRouter([
       },
       {
         path: "stake",
-        element: <MyFungibleAssets />,
+        element: <Stake />,
       },
     ],
   },
