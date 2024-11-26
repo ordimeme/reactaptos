@@ -19,7 +19,7 @@ export const UserOperationsSection: React.FC = () => {
   const { hasStake, hasRewards, isCreator } = useGetAccountData();
 
   return (
-    <div className="w-full basis-1/2 order-1 md:order-2">
+    <div className="w-full basis-1/2 order-1 space-y-4 md:order-2">
       <StakeCard />
       {hasStake && <UnstakeCard />}
       {hasRewards && <RewardCard />}

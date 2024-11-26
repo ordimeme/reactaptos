@@ -29,7 +29,7 @@ const Markets = () => {
 
   // 顶部卡片组件
   const TopCard = ({ title, item }: { title: string; item: typeof marketData[0] }) => (
-    <UICard className="group hover:shadow-md transition-all duration-300 rounded-[10px] cursor-pointer border-muted/40 dark:border-muted/20 flex-1 w-[calc(100vw-10rem)] md:w-[360px]">
+    <UICard className="group hover:shadow-md transition-all duration-300 rounded-[10px] cursor-pointer border-muted/40 dark:border-muted/20 flex-1 w-[calc(100vw-6rem)] md:w-[360px]">
       <CardHeader className="pb-2">
         <CardTitle className="text-base md:text-lg font-medium">{title}</CardTitle>
       </CardHeader>

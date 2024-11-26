@@ -43,7 +43,7 @@ export const RewardCard: React.FC = () => {
 
   return (
     <Card>
-      <CardContent className="px-4 py-4 bg-gray-100">
+      <CardContent className="px-4 py-4 bg-[var(--softBg)]">
         <div className="flex flex-row w-full justify-between">
           <div className="flex flex-row gap-6">
             <div>
@@ -58,13 +58,13 @@ export const RewardCard: React.FC = () => {
           </div>
           <div className="flex gap-4">
             <Button
-              className="bg-white text-black border-gray border-2 flex items-center"
+              className="bg-white hover:bg-gray-200 text-black border-gray border-1 flex items-center"
               onClick={onClaimRewardsClick}
             >
               Claim Rewards
             </Button>
             <Button
-              className="bg-white text-black border-gray border-2 flex items-center"
+              className="bg-white hover:bg-gray-200 text-black border-gray border-1 flex items-center"
               onClick={onStakeRewardsClick}
             >
               Stake Rewards

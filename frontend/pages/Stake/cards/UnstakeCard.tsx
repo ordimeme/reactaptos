@@ -66,7 +66,7 @@ export const UnstakeCard: React.FC = () => {
             </div>
             <div>
               <DialogTrigger asChild>
-                <Button className="bg-white text-black border-gray border-2 flex items-center">Unstake</Button>
+                <Button className="bg-white hover:bg-gray-200 text-black border-gray border-1 flex items-center">Unstake</Button>
               </DialogTrigger>
             </div>
           </div>

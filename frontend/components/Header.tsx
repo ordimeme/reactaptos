@@ -78,6 +78,7 @@ export function Header() {
               <SelectGroup>
                 <SelectItem value="Solana">Solana</SelectItem>
                 <SelectItem value="Move">Move</SelectItem>
+                <SelectItem value="Ethereum">Ethereum</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>

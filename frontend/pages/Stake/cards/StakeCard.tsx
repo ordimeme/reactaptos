@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { aptosClient } from "@/utils/aptosClient";
@@ -55,7 +56,7 @@ export const StakeCard: React.FC = () => {
   return (
     <Dialog>
       <Card>
-        <CardContent className="px-4 py-4">
+        <CardContent className="px-4 py-4 bg-[var(--softBg)]">
           <div className="flex flex-row w-full justify-between">
             <div className="flex justify-between flex-row gap-6">
               <div>
