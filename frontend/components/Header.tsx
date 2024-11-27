@@ -1,37 +1,25 @@
 import { useState, useContext } from "react";
 import { ThemeContext } from '@/context/ThemeContext'
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { WalletSelector } from "./WalletSelector";
 import ThemeToggle from "./ThemeToggle";
 import { NavLink } from "./NavLink";
-import { cn } from "@/lib/utils";
 import NavMobile from "./NavMobile";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { NetworkSelector } from "./NetworkSelector";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [selectedNetwork, setSelectedNetwork] = useState("Move")
   const { theme } = useContext(ThemeContext);
-  const location = useLocation();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
   }
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
   return (
     <div className="w-full border-b border-border/40">
       <div className="max-w-[1400px] mx-auto px-4 h-[100px] flex items-center justify-between">
+        {/* Logo */}
         <div className="flex-1">
           <Link to="/markets" className="flex items-center gap-2 md:gap-4">
             <img 
@@ -44,47 +32,18 @@ export function Header() {
           </Link>
         </div>
       
-        <div className="hidden lg:flex flex-1 items-center gap-1 md:gap-2">
-          <Link 
-            className={cn(
-              "px-2 md:px-3 py-2 rounded-md relative text-sm md:text-base font-normal",
-              "hover:bg-[var(--softBg)]",
-              isActive("/markets") && "after:absolute after:bottom-0 after:left-[30%] after:right-[30%] after:h-[2px] after:bg-foreground after:content-['']"
-            )} 
-            to={"/markets"}
-          >
-            Market
-          </Link>
-          <Link 
-            className={cn(
-              "px-2 md:px-3 py-2 rounded-md relative text-sm md:text-base font-normal",
-              "hover:bg-[var(--softBg)]",
-              isActive("/create") && "after:absolute after:bottom-0 after:left-[30%] after:right-[30%] after:h-[2px] after:bg-foreground after:content-['']"
-            )} 
-            to={"/create"}
-          >
-            Create
-          </Link>
+        {/* Navigation Links */}
+        <div className="hidden lg:flex flex-1 items-center">
           <NavLink />
         </div>
 
+        {/* Right Side Controls */}
         <div className="flex items-center gap-1 md:gap-4">
           <div className="mx-1 md:mx-2">
-            <Select 
-              value={selectedNetwork}
-              onValueChange={setSelectedNetwork}
-            >
-              <SelectTrigger className="w-[80px] md:w-[160px] h-8 md:h-10 text-sm md:text-base">
-                <SelectValue>{selectedNetwork}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="Solana">Solana</SelectItem>
-                  <SelectItem value="Move">Move</SelectItem>
-                  <SelectItem value="Ethereum">Ethereum</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <NetworkSelector 
+              selectedNetwork={selectedNetwork}
+              onNetworkChange={setSelectedNetwork}
+            />
           </div>
           <WalletSelector />
           <div className="hidden md:flex items-center ml-1 md:ml-2">
