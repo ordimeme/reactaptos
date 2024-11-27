@@ -77,3 +77,74 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes scroll-fast {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-scroll-fast {
+  animation: scroll-fast 30s linear infinite;
+  display: inline-flex;
+  gap: 1.5rem;
+}
+
+.animate-scroll-fast:hover {
+  animation-play-state: paused;
+}
+
+/* 确保滚动内容是连续的 */
+.animate-scroll-fast > * {
+  flex-shrink: 0;
+}
+
+/* 新卡片的闪亮效果 */
+@keyframes sparkle {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+  }
+}
+
+/* 次新卡片的渐变边框效果 */
+@keyframes gradient-border {
+  0% {
+    border-color: rgba(255, 215, 0, 0.3);
+  }
+  50% {
+    border-color: rgba(255, 215, 0, 0.6);
+  }
+  100% {
+    border-color: rgba(255, 215, 0, 0.3);
+  }
+}
+
+.card-new {
+  animation: sparkle 2s ease-in-out infinite;
+  border-width: 2px;
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.card-recent {
+  animation: gradient-border 3s ease-in-out infinite;
+  border-width: 2px;
+}

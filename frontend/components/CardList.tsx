@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
 import { marketData } from "@/data/marketData"
 import Card from "./Card"
 import { Button } from "./ui/button"
@@ -71,7 +72,13 @@ const CardList = ({ initialData }: CardListProps) => {
       <h1 className="text-2xl font-bold mb-6">Assets</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {getCurrentPageData().map((item) => (
-          <Card key={item.id} item={item} />
+          <Link 
+            key={item.id} 
+            to={`/token/${item.id}`} 
+            className="hover:no-underline group"
+          >
+            <Card item={item} />
+          </Link>
         ))}
       </div>
 

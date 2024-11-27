@@ -111,7 +111,7 @@ export const AddIncentivePoolDialog: React.FC = () => {
     <Dialog>
       <Card>
         {existsRewardSchedule ? (
-          <CardContent className="px-4 py-4 bg-gray-100">
+          <CardContent className="px-4 py-4 bg-[var(--softBg)]">
             <div className="flex flex-row w-full justify-between">
               <div className="flex flex-row gap-6">
                 <div>

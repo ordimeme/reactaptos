@@ -11,11 +11,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import ActivityScroll from "@/components/ActivityScroll"
+import { Link } from "react-router-dom";
+import { Flame } from "lucide-react";
+import { MarketItem, Trade } from "@/types/market";
 
 const Markets = () => {
-  const [sortBy, setSortBy] = useState<string>("newest")
+  const [sortBy, setSortBy] = useState<string>("creation-time")
   const [searchTerm, setSearchTerm] = useState("")
-  const [priceRange, setPriceRange] = useState<string>("all")
+  const [filterBy, setFilterBy] = useState<string>("all")
 
   // 获取 Top Gainer 和 Top Volume 数据
   const getTopGainer = () => {
@@ -26,34 +30,50 @@ const Markets = () => {
     return [...marketData].sort((a, b) => b.price - a.price)[1]
   }
 
+  // 获取安全的图片URL
+  const getSafeImageUrl = (symbol: string) => {
+    const safeName = symbol.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return `/tokens/${safeName}.svg`;
+  };
 
   // 顶部卡片组件
   const TopCard = ({ title, item }: { title: string; item: typeof marketData[0] }) => (
-    <UICard className="group hover:shadow-md transition-all duration-300 rounded-[10px] cursor-pointer border-muted/40 dark:border-muted/20 flex-1 w-[calc(100vw-6rem)] md:w-[360px]">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base md:text-lg font-medium">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 overflow-hidden rounded-[10px] flex items-center justify-center bg-muted/50 dark:bg-muted/20">
-            <img 
-              src={item.imageUrl} 
-              alt={item.name}
-              className="w-full h-full transition-transform duration-300 group-hover:scale-110"
-              loading="lazy"
-            />
+    <Link to={`/token/${item.id}`}>
+      <UICard className="group hover:shadow-md transition-all duration-300 rounded-[10px] cursor-pointer border-muted/40 dark:border-muted/20 flex-1 w-[calc(100vw-6rem)] md:w-[360px]">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-base md:text-lg font-medium">{title}</CardTitle>
+            {title === "Top Gainer" && (
+              <Flame className="h-5 w-5 text-orange-500" />
+            )}
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-base md:text-sm truncate">{item.name}</h3>
-            <p className="text-sm md:text-xs text-muted-foreground/70">{item.symbol}</p>
-            <div className="flex justify-between items-center mt-2 md:mt-1">
-              <span className="text-sm md:text-xs text-muted-foreground/70">Price</span>
-              <span className="font-semibold text-base md:text-sm">${item.price.toFixed(2)}</span>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 overflow-hidden rounded-[10px] flex items-center justify-center bg-muted/50 dark:bg-muted/20">
+              <img 
+                src={getSafeImageUrl(item.symbol)}
+                alt={item.name}
+                className="w-full h-full transition-transform duration-300 group-hover:scale-110"
+                loading="lazy"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = getSafeImageUrl(item.symbol);
+                }}
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-base md:text-sm truncate">{item.name}</h3>
+              <p className="text-sm md:text-xs text-muted-foreground/70">{item.symbol}</p>
+              <div className="flex justify-between items-center mt-2 md:mt-1">
+                <span className="text-sm md:text-xs text-muted-foreground/70">Price</span>
+                <span className="font-semibold text-base md:text-sm">${item.price.toFixed(2)}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </UICard>
+        </CardContent>
+      </UICard>
+    </Link>
   )
 
   // 筛选和排序逻辑
@@ -68,44 +88,86 @@ const Markets = () => {
       )
     }
 
-    // 价格范围过滤
-    switch (priceRange) {
-      case "0-100":
-        filtered = filtered.filter(item => item.price <= 100)
+    // 根据不同条件筛选
+    switch (filterBy) {
+      case "bonding-0-25":
+        filtered = filtered.filter(item => item.bondingProgress <= 25)
         break
-      case "100-500":
-        filtered = filtered.filter(item => item.price > 100 && item.price <= 500)
+      case "bonding-25-50":
+        filtered = filtered.filter(item => item.bondingProgress > 25 && item.bondingProgress <= 50)
         break
-      case "500+":
-        filtered = filtered.filter(item => item.price > 500)
+      case "bonding-50-75":
+        filtered = filtered.filter(item => item.bondingProgress > 50 && item.bondingProgress <= 75)
+        break
+      case "bonding-75-100":
+        filtered = filtered.filter(item => item.bondingProgress > 75)
         break
       default:
         break
     }
 
-    // 排序
+    // 优化排序逻辑
     switch (sortBy) {
-      case "newest":
+      case "creation-time":
         filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
         break
-      case "oldest":
-        filtered.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+      case "featured":
+        filtered.sort((a, b) => (b.marketCap * b.bondingProgress) - (a.marketCap * a.bondingProgress))
         break
-      case "price-high":
-        filtered.sort((a, b) => b.price - a.price)
+      case "last-trade":
+        filtered.sort((a, b) => {
+          const aLastTrade = a.trades[0]?.timestamp || a.timestamp
+          const bLastTrade = b.trades[0]?.timestamp || b.timestamp
+          return new Date(bLastTrade).getTime() - new Date(aLastTrade).getTime()
+        })
         break
-      case "price-low":
-        filtered.sort((a, b) => a.price - b.price)
+      case "last-reply":
+        filtered.sort((a, b) => {
+          const aLastComment = a.comments[0]?.timestamp || a.timestamp
+          const bLastComment = b.comments[0]?.timestamp || b.timestamp
+          return new Date(bLastComment).getTime() - new Date(aLastComment).getTime()
+        })
+        break
+      case "market-cap-high":
+        filtered.sort((a, b) => b.marketCap - a.marketCap)
+        break
+      case "market-cap-low":
+        filtered.sort((a, b) => a.marketCap - b.marketCap)
+        break
+      case "volume-24h-high":
+        filtered.sort((a, b) => getVolume(b, 24) - getVolume(a, 24))
+        break
+      case "volume-7d-high":
+        filtered.sort((a, b) => getVolume(b, 168) - getVolume(a, 168))
         break
       default:
+        // 默认按创建时间排序
+        filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
         break
     }
 
     return filtered
   }
 
+  // 计算交易量
+  const getVolume = (item: MarketItem, hours: number) => {
+    const timeThreshold = new Date(Date.now() - hours * 60 * 60 * 1000)
+    return item.trades
+      .filter((trade: Trade) => new Date(trade.timestamp) > timeThreshold)
+      .reduce((sum: number, trade: Trade) => sum + trade.aptAmount, 0)
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* 使用活动滚动条组件 */}
+      <div className="mb-8">
+        <ActivityScroll 
+          speed={30}
+          updateInterval={3000}
+          initialCount={20}
+        />
+      </div>
+
       {/* Top Cards */}
       <div className="relative mb-8">
         {/* 卡片容器 */}
@@ -148,25 +210,30 @@ const Markets = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="price-high">Price High to Low</SelectItem>
-                <SelectItem value="price-low">Price Low to High</SelectItem>
+                <SelectItem value="creation-time">Creation Time</SelectItem>
+                <SelectItem value="featured">Featured 🔥</SelectItem>
+                <SelectItem value="last-trade">Last Trade</SelectItem>
+                <SelectItem value="last-reply">Last Reply</SelectItem>
+                <SelectItem value="market-cap-high">Market Cap (High to Low)</SelectItem>
+                <SelectItem value="market-cap-low">Market Cap (Low to High)</SelectItem>
+                <SelectItem value="volume-24h-high">Volume 24H (High to Low)</SelectItem>
+                <SelectItem value="volume-7d-high">Volume 7D (High to Low)</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>
 
-          {/* 价格范围筛选 */}
-          <Select value={priceRange} onValueChange={setPriceRange}>
+          {/* Bonding Progress 筛选 */}
+          <Select value={filterBy} onValueChange={setFilterBy}>
             <SelectTrigger className="w-full md:w-[200px] rounded-[10px]">
-              <SelectValue placeholder="Price Range" />
+              <SelectValue placeholder="Bonding Progress" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem value="all">All Prices</SelectItem>
-                <SelectItem value="0-100">$0 - $100</SelectItem>
-                <SelectItem value="100-500">$100 - $500</SelectItem>
-                <SelectItem value="500+">$500+</SelectItem>
+                <SelectItem value="all">All Progress</SelectItem>
+                <SelectItem value="bonding-0-25">0% - 25%</SelectItem>
+                <SelectItem value="bonding-25-50">25% - 50%</SelectItem>
+                <SelectItem value="bonding-50-75">50% - 75%</SelectItem>
+                <SelectItem value="bonding-75-100">75% - 100%</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>

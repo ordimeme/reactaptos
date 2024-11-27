@@ -1,11 +1,11 @@
-import { IS_DEV } from "@/constants";
 import { useState, useContext } from "react";
 import { ThemeContext } from '@/context/ThemeContext'
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { WalletSelector } from "./WalletSelector";
-import { buttonVariants } from "./ui/button";
 import ThemeToggle from "./ThemeToggle";
+import { NavLink } from "./NavLink";
 import NavMobile from "./NavMobile";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -21,17 +21,19 @@ export function Header() {
   // const [selectedNetwork, setSelectedNetwork] = useState("Aptos")
   const [selectedNetwork, setSelectedNetwork] = useState("Move")
   const { theme } = useContext(ThemeContext);
+  const location = useLocation();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
   }
 
-  // const title = useMemo(() => {
-  //   if (!isRoot) return "Fungible Asset Launchpad";
-  //   return data?.asset.symbol.toUpperCase() ?? config.defaultAsset?.name ?? "Fungible Asset Launchpad";
-  // }, [isRoot, data?.asset]);
+  // 判断链接是否活跃
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
 
   return (
+    //logo area
     <div className="px-4 h-[100px] flex items-center justify-between">
       <div className="flex-1">
         <Link to="/markets" className="flex items-center gap-4">
@@ -44,27 +46,32 @@ export function Header() {
           <h1 className="font-bold text-2xl md:text-4xl hidden md:block">ReactAptos</h1>
         </Link>
       </div>
+    
+      <div className="hidden lg:flex flex-1 items-center gap-2">
+        <Link 
+          className={cn(
+            "px-3 py-2 rounded-md relative text-base font-normal",
+            "hover:bg-[var(--softBg)]",
+            isActive("/markets") && "after:absolute after:bottom-0 after:left-[30%] after:right-[30%] after:h-[2px] after:bg-foreground after:content-['']"
+          )} 
+          to={"/markets"}
+        >
+          Market
+        </Link>
+        <Link 
+         className={cn(
+          "px-3 py-2 rounded-md relative text-base font-normal",
+          "hover:bg-[var(--softBg)]",
+          isActive("/create") && "after:absolute after:bottom-0 after:left-[30%] after:right-[30%] after:h-[2px] after:bg-foreground after:content-['']"
+        )} 
+          to={"/create"}
+        >
+          Create
+        </Link>
+        <NavLink />
+      </div>
 
-      <div className="hidden lg:flex flex-1 items-center">
 
-        <Link className={buttonVariants({ variant: "link" })} to={"/markets"}>
-            Market
-        </Link>
-        <Link className={buttonVariants({ variant: "link" })} to={"/mint"}>
-            Mint
-        </Link>
-        <Link className={buttonVariants({ variant: "link" })} to={"/my-assets"}>
-            MyAssets
-        </Link>
-        <Link className={buttonVariants({ variant: "link" })} to={"/stake"}>
-            Stake
-        </Link>
-        {IS_DEV && (
-        <Link className={buttonVariants({ variant: "link" })} to={"/create-asset"}>
-            Create
-        </Link>
-        )}
-    </div>
     <div className="flex gap-1 lg:gap-4">
           <div className="ml-auto mx-2">
           <Select 
