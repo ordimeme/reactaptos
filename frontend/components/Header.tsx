@@ -5,7 +5,7 @@ import { WalletSelector } from "./WalletSelector";
 import ThemeToggle from "./ThemeToggle";
 import { NavLink } from "./NavLink";
 import { cn } from "@/lib/utils";
-import { AlignJustify } from "lucide-react"
+import NavMobile from "./NavMobile";
 import {
   Select,
   SelectContent,
@@ -91,12 +91,7 @@ export function Header() {
             <ThemeToggle />
           </div>
           <div className="lg:hidden flex ml-1">
-            <button
-              onClick={toggleMenu}
-              className="p-2 rounded-lg hover:bg-[var(--softBg)] transition-all duration-200 active:scale-95"
-            >
-              <AlignJustify className="h-5 w-5 md:h-6 md:w-6" />
-            </button>
+            <NavMobile isOpen={isMenuOpen} toggleMenu={toggleMenu} />
           </div>
         </div>
       </div>

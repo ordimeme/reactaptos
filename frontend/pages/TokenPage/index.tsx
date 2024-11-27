@@ -22,14 +22,12 @@ export default function TokenPage() {
   
   // 评论相关状态
   const [commentContent, setCommentContent] = useState("");
-  const [visibleComments, setVisibleComments] = useState(20);
   const [activeTab, setActiveTab] = useState<"comments" | "trades">("comments");
   
   // 交易相关状态
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
   const [tokenType, setTokenType] = useState<"APT" | "APT">("APT");
   const [amount, setAmount] = useState<string>("0.0");
-  const [visibleTrades, setVisibleTrades] = useState(20);
   
   // 滑点设置相关状态
   const [isSlippageDialogOpen, setIsSlippageDialogOpen] = useState(false);
@@ -82,16 +80,6 @@ export default function TokenPage() {
     setAmount("0.0");
   };
 
-  // 加载更多评论
-  const handleLoadMore = () => {
-    setVisibleComments(prev => Math.min(prev + 20, token.comments.length));
-  };
-
-  // 加载更多交易记录
-  const handleLoadMoreTrades = () => {
-    setVisibleTrades(prev => Math.min(prev + 20, token.trades.length));
-  };
-
   // 提交评论
   const handleSubmitComment = () => {
     if (!commentContent.trim()) return;
@@ -140,7 +128,6 @@ export default function TokenPage() {
       case "buy/sell":
         return (
           <div className="space-y-6">
-            {/* 直接显示 Trade Card，移除之前的 Market Cap 和 CA 信息卡片 */}
             <TradeCard 
               token={{
                 ...token,
@@ -166,10 +153,6 @@ export default function TokenPage() {
                 setActiveTab={() => {}}
                 commentContent={commentContent}
                 setCommentContent={setCommentContent}
-                visibleComments={visibleComments}
-                visibleTrades={visibleTrades}
-                handleLoadMore={handleLoadMore}
-                handleLoadMoreTrades={handleLoadMoreTrades}
                 handleSubmitComment={handleSubmitComment}
                 formatTime={formatTime}
               />
@@ -180,8 +163,6 @@ export default function TokenPage() {
         return (
           <TradesView 
             token={token}
-            visibleTrades={visibleTrades}
-            handleLoadMoreTrades={handleLoadMoreTrades}
             formatTime={formatTime}
           />
         );
@@ -261,10 +242,6 @@ export default function TokenPage() {
             setActiveTab={setActiveTab}
             commentContent={commentContent}
             setCommentContent={setCommentContent}
-            visibleComments={visibleComments}
-            visibleTrades={visibleTrades}
-            handleLoadMore={handleLoadMore}
-            handleLoadMoreTrades={handleLoadMoreTrades}
             handleSubmitComment={handleSubmitComment}
             formatTime={formatTime}
           />

@@ -6,6 +6,11 @@ import { MarketItem } from "@/data/marketData"
 import { truncateAddress, getFullAddress } from "@/utils/truncateAddress"
 import { Copy } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { useState, useRef } from "react"
+import { Pagination } from "@/components/Pagination"
+import { TradesView } from "./TradesView"
+
+const ITEMS_PER_PAGE = 20
 
 interface ActivityTabsProps {
   token: MarketItem;
@@ -13,10 +18,6 @@ interface ActivityTabsProps {
   setActiveTab: (tab: "comments" | "trades") => void;
   commentContent: string;
   setCommentContent: (content: string) => void;
-  visibleComments: number;
-  visibleTrades: number;
-  handleLoadMore: () => void;
-  handleLoadMoreTrades: () => void;
   handleSubmitComment: () => void;
   formatTime: (timestamp: string) => string;
 }
@@ -27,14 +28,13 @@ export function ActivityTabs({
   setActiveTab,
   commentContent,
   setCommentContent,
-  visibleComments,
-  visibleTrades,
-  handleLoadMore,
-  handleLoadMoreTrades,
   handleSubmitComment,
   formatTime
 }: ActivityTabsProps) {
   const { toast } = useToast();
+  const [currentCommentsPage, setCurrentCommentsPage] = useState(1);
+  const totalCommentsPages = Math.ceil(token.comments.length / ITEMS_PER_PAGE);
+  const commentsRef = useRef<HTMLDivElement>(null);
 
   const handleCopyAddress = async (address: string) => {
     try {
@@ -51,6 +51,17 @@ export function ActivityTabs({
         variant: "destructive",
       });
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentCommentsPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const getCurrentPageComments = () => {
+    const startIndex = (currentCommentsPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return token.comments.slice(startIndex, endIndex);
   };
 
   return (
@@ -84,8 +95,8 @@ export function ActivityTabs({
         </div>
 
         {/* 评论列表 */}
-        <div className="space-y-4">
-          {token.comments.slice(0, visibleComments).map((comment, index) => (
+        <div className="space-y-4" ref={commentsRef}>
+          {getCurrentPageComments().map((comment, index) => (
             <Card key={index} className="p-4">
               <div className="flex items-start gap-3">
                 <div className="flex-1 space-y-1">
@@ -110,96 +121,26 @@ export function ActivityTabs({
               </div>
             </Card>
           ))}
-          {token.comments.length > visibleComments && (
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              onClick={handleLoadMore}
-            >
-              Load More Comments
-            </Button>
+
+          {token.comments.length > ITEMS_PER_PAGE && (
+            <Pagination 
+              currentPage={currentCommentsPage}
+              totalPages={totalCommentsPages}
+              onPageChange={handlePageChange}
+              scrollToRef={commentsRef}
+            />
           )}
         </div>
       </TabsContent>
 
-      {/* 更新 Trades Tab Content 样式 */}
+      {/* Trades Tab Content */}
       <TabsContent value="trades">
-        <div className="rounded-lg border border-muted/40 dark:border-muted/20 overflow-hidden">
-          {/* 表头 */}
-          <div className="grid grid-cols-6 gap-2 p-3 text-sm text-muted-foreground bg-muted/5">
-            <div>Account</div>
-            <div>Type</div>
-            <div className="text-right">Amount ({token.symbol})</div>
-            <div className="text-right">Amount (APT)</div>
-            <div className="text-right">Time</div>
-            <div className="text-right">Transaction</div>
-          </div>
-          
-          {/* 交易列表 */}
-          <div className="divide-y divide-muted/20">
-            {token.trades.slice(0, visibleTrades).map((trade, index) => (
-              <div 
-                key={index} 
-                className="grid grid-cols-6 gap-2 p-3 text-sm hover:bg-muted/5 transition-colors"
-              >
-                {/* 账户地址 */}
-                <div className="font-mono text-xs truncate">
-                  {trade.account}
-                </div>
-                
-                {/* 交易类型 */}
-                <div>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    trade.type === 'buy' 
-                      ? 'bg-green-500/20 text-green-500' 
-                      : 'bg-red-500/20 text-red-500'
-                  }`}>
-                    {trade.type.toUpperCase()}
-                  </span>
-                </div>
-                
-                {/* 代币数量 */}
-                <div className="text-right font-mono">
-                  {trade.tokenAmount.toFixed(3)}
-                </div>
-
-                {/* APT 金额 */}
-                <div className="text-right font-mono">
-                  {trade.aptAmount.toFixed(3)}
-                </div>
-                
-                {/* 时间 */}
-                <div className="text-right text-muted-foreground text-xs">
-                  {formatTime(trade.timestamp)}
-                </div>
-
-                {/* 交易哈希 */}
-                <div className="text-right">
-                  <a 
-                    href={`https://explorer.aptoslabs.com/txn/${trade.txHash}?network=mainnet`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-mono text-xs text-blue-500 hover:text-blue-600 truncate inline-block max-w-[100px]"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {trade.txHash.slice(0, 6)}...{trade.txHash.slice(-4)}
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="space-y-4">
+          <TradesView 
+            token={token}
+            formatTime={formatTime}
+          />
         </div>
-
-        {/* Load More 按钮 */}
-        {token.trades.length > visibleTrades && (
-          <Button 
-            variant="outline" 
-            className="w-full mt-4" 
-            onClick={handleLoadMoreTrades}
-          >
-            Load More Trades
-          </Button>
-        )}
       </TabsContent>
     </Tabs>
   );

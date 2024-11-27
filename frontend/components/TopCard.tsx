@@ -1,15 +1,102 @@
 import { Link } from "react-router-dom"
-import { Flame } from "lucide-react"
+import { Flame, Info } from "lucide-react"
 import { Card as UICard, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { MarketItem } from "@/data/marketData"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { ProgressRing } from "./ProgressRing"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface TopCardProps {
   title: string
   item: MarketItem
 }
+
+const GoldCoin = () => (
+  <svg 
+    width="16" 
+    height="16" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle 
+      cx="12" 
+      cy="12" 
+      r="11" 
+      fill="url(#glowGradient)"
+    />
+    
+    <circle 
+      cx="12" 
+      cy="12" 
+      r="10" 
+      fill="url(#goldGradient)" 
+      filter="url(#shadow)"
+    />
+    
+    <path
+      d="M8 8C12 6 16 8 16 12"
+      stroke="url(#highlightGradient)"
+      strokeWidth="2"
+      strokeLinecap="round"
+      opacity="0.7"
+    />
+
+    <defs>
+      <radialGradient 
+        id="glowGradient" 
+        cx="0.5" 
+        cy="0.5" 
+        r="0.5" 
+        gradientUnits="userSpaceOnUse" 
+        gradientTransform="translate(12 12) rotate(90) scale(12)"
+      >
+        <stop offset="0.6" stopColor="#FFD700" stopOpacity="0.3" />
+        <stop offset="1" stopColor="#FFD700" stopOpacity="0" />
+      </radialGradient>
+
+      <radialGradient 
+        id="goldGradient" 
+        cx="0.5" 
+        cy="0.3" 
+        r="0.7" 
+        gradientUnits="userSpaceOnUse" 
+        gradientTransform="translate(12 12) rotate(90) scale(12)"
+      >
+        <stop offset="0" stopColor="#FFE17D" />
+        <stop offset="0.3" stopColor="#FFD700" />
+        <stop offset="0.8" stopColor="#FFA500" />
+        <stop offset="1" stopColor="#FF8C00" />
+      </radialGradient>
+
+      <linearGradient
+        id="highlightGradient"
+        x1="8"
+        y1="8"
+        x2="16"
+        y2="12"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0" stopColor="white" stopOpacity="0.8" />
+        <stop offset="1" stopColor="white" stopOpacity="0" />
+      </linearGradient>
+
+      <filter id="shadow" x="-2" y="-2" width="28" height="28" filterUnits="userSpaceOnUse">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="1" />
+        <feOffset dy="1" />
+        <feComposite in2="SourceAlpha" operator="out" />
+        <feColorMatrix values="0 0 0 0 1 0 0 0 0 0.843137 0 0 0 0 0 0 0 0 0.5 0" />
+        <feBlend in2="SourceGraphic" />
+      </filter>
+    </defs>
+  </svg>
+);
 
 const TopCard = ({ title, item }: TopCardProps) => {
   const [imageCache, setImageCache] = useState<Record<string, boolean>>({})
@@ -36,12 +123,17 @@ const TopCard = ({ title, item }: TopCardProps) => {
       )}
     >
       <UICard className="group hover:shadow-md transition-all duration-300 rounded-[10px] cursor-pointer border-muted/40 dark:border-muted/20 focus:outline-none bg-[var(--softBg)] backdrop-blur-sm">
-        <CardHeader className="pb-4 px-12">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-sm md:text-base font-medium">{title}</CardTitle>
-            {title === "Top Gainer" && (
-              <Flame className="h-4 w-4 text-orange-500" />
-            )}
+        <CardHeader className="pb-4 px-6 md:px-12">
+          <div className="flex items-center px-2">
+            <CardTitle className="text-sm md:text-base font-medium flex items-center gap-2">
+              {title}
+              {title === "Top Gainer" && (
+                <Flame className="h-4 w-4 text-orange-500" />
+              )}
+              {title === "Top Volume" && (
+                <GoldCoin />
+              )}
+            </CardTitle>
           </div>
         </CardHeader>
         <CardContent className="px-6 md:px-12 pb-10">
@@ -63,25 +155,39 @@ const TopCard = ({ title, item }: TopCardProps) => {
 
             {/* 右侧：信息 */}
             <div className="flex-1 space-y-6 md:space-y-8">
-              {/* 名称和价格 */}
+              {/* 名称和市值 */}
               <div className="flex justify-between items-start gap-4">
                 <div className="min-w-0 flex-1">
                   <h3 className="font-semibold text-lg md:text-xl truncate mb-2">{item.name}</h3>
                   <span className="text-sm text-muted-foreground">{item.symbol}</span>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="font-semibold text-lg md:text-xl mb-2">${item.price.toFixed(2)}</div>
+                  <div className="flex items-center justify-end gap-2 mb-2">
+                    <div className="font-semibold text-lg md:text-xl">
+                      ${item.marketCap.toLocaleString()}
+                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Market Cap</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <div className={`text-sm font-medium ${item.priceChange24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                     {item.priceChange24h >= 0 ? '+' : ''}{item.priceChange24h.toFixed(2)}%
                   </div>
                 </div>
               </div>
 
-              {/* 市值和进度 */}
+              {/* 价格和进度 */}
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground/70">MCap:</span>
-                  <span>${item.marketCap.toLocaleString()}</span>
+                  <span className="text-muted-foreground/70">Price:</span>
+                  <span>${item.price.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <ProgressRing progress={item.bondingProgress} />

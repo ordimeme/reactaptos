@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { marketData } from "@/data/marketData"
+import { Link } from "react-router-dom"
 
 interface ActivityScrollProps {
   speed: number;
@@ -13,6 +14,7 @@ interface Activity {
   amount?: number;
   address: string;
   timestamp: string;
+  tokenId: string;
 }
 
 const ActivityScroll: React.FC<ActivityScrollProps> = ({ 
@@ -22,7 +24,6 @@ const ActivityScroll: React.FC<ActivityScrollProps> = ({
 }) => {
   const [activities, setActivities] = useState<Activity[]>([]);
 
-  // 在组件内部生成活动数据
   useEffect(() => {
     const generateActivity = () => {
       const randomToken = marketData[Math.floor(Math.random() * marketData.length)];
@@ -36,14 +37,13 @@ const ActivityScroll: React.FC<ActivityScrollProps> = ({
         symbol: randomToken.symbol,
         amount,
         address,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        tokenId: randomToken.id
       };
     };
 
-    // 生成初始活动数据
     setActivities(Array.from({ length: initialCount }, generateActivity));
 
-    // 设置定时器定期更新活动数据
     const timer = setInterval(() => {
       setActivities(prev => [generateActivity(), ...prev.slice(0, -1)]);
     }, updateInterval);
@@ -72,7 +72,10 @@ const ActivityScroll: React.FC<ActivityScrollProps> = ({
 
 // 活动项组件
 const ActivityItem = ({ activity }: { activity: Activity }) => (
-  <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+  <Link 
+    to={`/token/${activity.tokenId}`}
+    className="flex items-center gap-2 text-sm whitespace-nowrap hover:bg-muted/20 px-2 py-1 rounded-md transition-colors"
+  >
     <span className={`
       px-2 py-0.5 rounded-full text-xs font-medium
       ${activity.type === 'buy' ? 'bg-green-500/20 text-green-500' : 
@@ -87,7 +90,7 @@ const ActivityItem = ({ activity }: { activity: Activity }) => (
     <span className="text-xs text-muted-foreground/70">
       by {activity.address}
     </span>
-  </div>
+  </Link>
 );
 
 export default ActivityScroll; 

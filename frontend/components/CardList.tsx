@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { MarketItem } from "@/data/marketData"
 import Card from "./Card"
-import { Button } from "./ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Pagination } from "./Pagination"
+import { useState, useEffect, useRef } from "react"
 
 const ITEMS_PER_PAGE = 18
 
@@ -14,6 +13,7 @@ interface CardListProps {
 const CardList = ({ initialData }: CardListProps) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [data, setData] = useState<MarketItem[]>(initialData)
+  const listRef = useRef<HTMLDivElement>(null)
   
   useEffect(() => {
     setData(initialData)
@@ -30,13 +30,15 @@ const CardList = ({ initialData }: CardListProps) => {
 
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
     <div className="max-w-[1400px] mx-auto">
       <h1 className="text-2xl font-bold mb-8">Assets</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div 
+        ref={listRef}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
         {getCurrentPageData().map((item) => (
           <Link 
             key={item.id} 
@@ -48,39 +50,14 @@ const CardList = ({ initialData }: CardListProps) => {
         ))}
       </div>
 
-      {/* 分页控制器 */}
-      <div className="flex justify-center items-center gap-3 mt-12">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="h-9 w-9"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
-          <Button
-            key={pageNumber}
-            variant={currentPage === pageNumber ? "default" : "outline"}
-            onClick={() => handlePageChange(pageNumber)}
-            className="h-9 w-9"
-          >
-            {pageNumber}
-          </Button>
-        ))}
-
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="h-9 w-9"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
+      {data.length > ITEMS_PER_PAGE && (
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          scrollToRef={listRef}
+        />
+      )}
     </div>
   )
 }

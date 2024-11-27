@@ -3,23 +3,25 @@ import { MarketItem } from "@/data/marketData"
 import { truncateAddress, getFullAddress, formatTxHash } from "@/utils/truncateAddress"
 import { Copy } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
+import { Pagination } from "@/components/Pagination"
 
 interface TradesViewProps {
   token: MarketItem;
-  visibleTrades: number;
-  handleLoadMoreTrades: () => void;
   formatTime: (timestamp: string) => string;
 }
 
+const TRADES_PER_PAGE = 20
+
 export function TradesView({
   token,
-  visibleTrades,
-  handleLoadMoreTrades,
   formatTime
 }: TradesViewProps) {
   const { toast } = useToast();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(token.trades.length / TRADES_PER_PAGE);
+  const tradesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -47,8 +49,19 @@ export function TradesView({
     }
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const getCurrentPageTrades = () => {
+    const startIndex = (currentPage - 1) * TRADES_PER_PAGE;
+    const endIndex = startIndex + TRADES_PER_PAGE;
+    return token.trades.slice(startIndex, endIndex);
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" ref={tradesRef}>
       <div className="rounded-lg border border-muted/40 dark:border-muted/20 overflow-hidden">
         {/* 表头 */}
         <div className="grid grid-cols-6 gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm text-muted-foreground bg-muted/5">
@@ -62,7 +75,8 @@ export function TradesView({
         
         {/* 交易列表 */}
         <div className="divide-y divide-muted/20">
-          {token.trades.slice(0, visibleTrades).map((trade, index) => (
+          {(token.trades.length > TRADES_PER_PAGE ? getCurrentPageTrades() : token.trades)
+            .map((trade, index) => (
             <div 
               key={index} 
               className="grid grid-cols-6 gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm hover:bg-muted/5 transition-colors"
@@ -125,14 +139,13 @@ export function TradesView({
         </div>
       </div>
 
-      {token.trades.length > visibleTrades && (
-        <Button 
-          variant="outline" 
-          className="w-full mt-4" 
-          onClick={handleLoadMoreTrades}
-        >
-          Load More Trades
-        </Button>
+      {token.trades.length > TRADES_PER_PAGE && (
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          scrollToRef={tradesRef}
+        />
       )}
     </div>
   );

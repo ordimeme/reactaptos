@@ -17,6 +17,11 @@ const NavMobile = ({ isOpen, toggleMenu}: NavMobileProps) => {
     { to: '/create', label: 'Create' },
   ];
 
+  // 获取当前主题名称
+  const getThemeName = () => {
+    return theme === 'dark' ? 'Dark' : 'Light';
+  };
+
   return (
     <div className="lg:hidden">
       <button
@@ -59,14 +64,14 @@ const NavMobile = ({ isOpen, toggleMenu}: NavMobileProps) => {
               </button>
             </div>
 
-            {/* 导航链接 */}
-            <div className="p-4 space-y-2">
+            {/* 导航链接 - 增加字体大小 */}
+            <div className="p-4 space-y-3">
               {/* 主菜单链接 */}
               {mainLinks.map((link, index) => (
                 <Link
                   key={index}
                   to={link.to}
-                  className="flex items-center px-3 py-2.5 rounded-md text-sm transition-colors duration-200 hover:bg-[var(--softBg)]"
+                  className="flex items-center px-4 py-3 rounded-md text-base font-medium transition-colors duration-200 hover:bg-[var(--softBg)]"
                   onClick={toggleMenu}
                 >
                   {link.label}
@@ -74,24 +79,24 @@ const NavMobile = ({ isOpen, toggleMenu}: NavMobileProps) => {
               ))}
 
               {/* NavLink 组件 - 自定义样式 */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Link
                   to="/mint"
-                  className="flex items-center px-3 py-2.5 rounded-md text-sm transition-colors duration-200 hover:bg-[var(--softBg)]"
+                  className="flex items-center px-4 py-3 rounded-md text-base font-medium transition-colors duration-200 hover:bg-[var(--softBg)]"
                   onClick={toggleMenu}
                 >
                   Mint
                 </Link>
                 <Link
                   to="/stake"
-                  className="flex items-center px-3 py-2.5 rounded-md text-sm transition-colors duration-200 hover:bg-[var(--softBg)]"
+                  className="flex items-center px-4 py-3 rounded-md text-base font-medium transition-colors duration-200 hover:bg-[var(--softBg)]"
                   onClick={toggleMenu}
                 >
                   Stake
                 </Link>
                 <Link
                   to="/my-assets"
-                  className="flex items-center px-3 py-2.5 rounded-md text-sm transition-colors duration-200 hover:bg-[var(--softBg)]"
+                  className="flex items-center px-4 py-3 rounded-md text-base font-medium transition-colors duration-200 hover:bg-[var(--softBg)]"
                   onClick={toggleMenu}
                 >
                   My Assets
@@ -102,7 +107,7 @@ const NavMobile = ({ isOpen, toggleMenu}: NavMobileProps) => {
             {/* 主题切换 */}
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/40">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Theme</span>
+                <span className="text-base text-muted-foreground">{getThemeName()}</span>
                 <ThemeToggle />
               </div>
             </div>

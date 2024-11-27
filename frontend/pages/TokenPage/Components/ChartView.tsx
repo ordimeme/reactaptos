@@ -26,7 +26,6 @@ export function ChartView({ token }: ChartViewProps) {
   const chartRef = useRef<any>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
-  // 将 getTimeStepAndCount 移到这里
   const getTimeStepAndCount = useCallback((intervalValue: string) => {
     switch (intervalValue) {
       case "5m":
@@ -198,7 +197,7 @@ export function ChartView({ token }: ChartViewProps) {
     <Card className="border-muted/40 dark:border-muted/20 w-full">
       <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <CardTitle className="text-base">Price Chart</CardTitle>
+          <CardTitle className="text-base">Trading</CardTitle>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
             <div className="grid grid-cols-3 sm:flex gap-1 w-full sm:w-auto">
               {intervals.map((item: IntervalOption) => (
