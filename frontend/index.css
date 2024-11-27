@@ -148,3 +148,40 @@
   animation: gradient-border 3s ease-in-out infinite;
   border-width: 2px;
 }
+
+/* TradingView 图表容器样式 */
+.tradingview-chart-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* 确保图表容器在所有设备上都能正确显示 */
+.tradingview-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+
+/* 移动端适配 */
+@media (max-width: 640px) {
+  .tradingview-chart-container {
+    height: 300px !important;
+  }
+  
+  .tradingview-wrapper {
+    border-radius: 0;
+  }
+  
+  /* 移动端调整内容区域的内边距 */
+  .card-content {
+    padding: 0;
+  }
+}
+
+/* 桌面端样式 */
+@media (min-width: 641px) {
+  .tradingview-chart-container {
+    height: 600px !important;
+  }
+}

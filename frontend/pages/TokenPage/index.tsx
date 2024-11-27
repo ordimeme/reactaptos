@@ -99,7 +99,7 @@ export default function TokenPage() {
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     
-    // 找到24小时前最近的交易
+    // 找到24小��前最近的交易
     const oldTrade = trades.find(trade => new Date(trade.timestamp) < oneDayAgo);
     const latestTrade = trades[0];
 
@@ -244,9 +244,10 @@ export default function TokenPage() {
         </CardHeader>
       </Card>
 
-      {/* 桌面端布局 */}
-      <div className="hidden lg:flex lg:flex-row gap-8">
-        <div className="flex-1 space-y-8">
+      {/* 桌面端布局 - 修改这里的宽度比例 */}
+      <div className="hidden lg:flex lg:flex-row gap-6">
+        {/* 左侧列 - 减小宽度 */}
+        <div className="w-[calc(100%-480px)] space-y-6">
           {/* Price Chart Card */}
           <ChartView token={token} />
 
@@ -266,13 +267,13 @@ export default function TokenPage() {
           />
         </div>
 
-        {/* Right Column */}
-        <div className="lg:w-[400px] space-y-6">
+        {/* 右侧列 - 增加宽度 */}
+        <div className="w-[460px] space-y-6">
           {/* Trade Card */}
           <TradeCard 
             token={{
               ...token,
-              imageUrl: getSafeImageUrl(token.symbol) // 传递安全的图片URL
+              imageUrl: getSafeImageUrl(token.symbol)
             }}
             tradeType={tradeType}
             tokenType={tokenType}
@@ -289,7 +290,7 @@ export default function TokenPage() {
           <TokenInfo 
             token={{
               ...token,
-              imageUrl: getSafeImageUrl(token.symbol) // 传递安全的图片URL
+              imageUrl: getSafeImageUrl(token.symbol)
             }} 
           />
         </div>

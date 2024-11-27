@@ -1,181 +1,182 @@
-import { useEffect, useContext, useState } from "react";
+import { useEffect, useContext, useState, useRef, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MarketItem } from "@/types/market";
 import { ThemeContext } from "@/context/ThemeContext";
 import { getPriceData } from "@/data/priceData";
-
-declare global {
-  interface Window {
-    TradingView?: any;
-  }
-}
+import { createChart, UTCTimestamp } from 'lightweight-charts';
 
 interface ChartViewProps {
   token: MarketItem;
+}
+
+// 定义时间间隔选项的类型
+interface IntervalOption {
+  value: string;
+  label: string;
 }
 
 export function ChartView({ token }: ChartViewProps) {
   const { theme } = useContext(ThemeContext);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   const [interval, setInterval] = useState("1h");
-  const [chartData] = useState(() => getPriceData(token.symbol, token.price));
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<any>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
-  // 时间间隔选项
-  const intervals = [
+  // 将 getTimeStepAndCount 移到这里
+  const getTimeStepAndCount = useCallback((intervalValue: string) => {
+    switch (intervalValue) {
+      case "5m":
+        return { timeStep: 5 * 60, count: 200 }; // 5分钟，200个数据点
+      case "15m":
+        return { timeStep: 15 * 60, count: 200 }; // 15分钟
+      case "1h":
+        return { timeStep: 60 * 60, count: 200 }; // 1小时
+      case "4h":
+        return { timeStep: 4 * 60 * 60, count: 200 }; // 4小时
+      case "1d":
+        return { timeStep: 24 * 60 * 60, count: 200 }; // 1天
+      case "1w":
+        return { timeStep: 7 * 24 * 60 * 60, count: 200 }; // 1周
+      default:
+        return { timeStep: 60 * 60, count: 200 }; // 默认1小时
+    }
+  }, []);
+
+  // 现在可以安全地使用 getTimeStepAndCount
+  const chartData = useMemo(() => {
+    const { timeStep, count } = getTimeStepAndCount(interval);
+    return getPriceData(token.symbol, token.price, timeStep, count);
+  }, [token.symbol, token.price, interval, getTimeStepAndCount]);
+
+  // 定义时间间隔选项
+  const intervals: IntervalOption[] = useMemo(() => [
     { value: "5m", label: "5m" },
     { value: "15m", label: "15m" },
     { value: "1h", label: "1h" },
     { value: "4h", label: "4h" },
     { value: "1d", label: "1D" },
     { value: "1w", label: "1W" },
-  ];
+  ], []);
 
-  // 监听窗口大小变化
+  const chartOptions = useMemo(() => ({
+    layout: {
+      background: { color: theme === 'dark' ? '#1a1b1e' : '#ffffff' },
+      textColor: theme === 'dark' ? '#d1d4dc' : '#000000',
+    },
+    grid: {
+      vertLines: { color: theme === 'dark' ? '#2B2B43' : '#e1e3eb' },
+      horzLines: { color: theme === 'dark' ? '#2B2B43' : '#e1e3eb' },
+    },
+    timeScale: {
+      timeVisible: true,
+      secondsVisible: false,
+      fixLeftEdge: true,
+      fixRightEdge: true,
+    },
+    crosshair: {
+      mode: 1,
+    },
+    handleScale: {
+      axisPressedMouseMove: true,
+    },
+    handleScroll: {
+      mouseWheel: true,
+      pressedMouseMove: true,
+    },
+  }), [theme]);
+
+  const initChart = useCallback(() => {
+    if (!chartContainerRef.current) return;
+
+    try {
+      if (chartRef.current) {
+        chartRef.current.remove();
+        chartRef.current = null;
+      }
+
+      const width = chartContainerRef.current.clientWidth;
+      const containerHeight = isMobile ? 300 : 600;
+
+      const chart = createChart(chartContainerRef.current, {
+        ...chartOptions,
+        width,
+        height: containerHeight,
+      });
+
+      chartRef.current = chart;
+
+      const candlestickSeries = chart.addCandlestickSeries({
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderUpColor: '#26a69a',
+        borderDownColor: '#ef5350',
+        wickUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
+      });
+
+      candlestickSeries.setData(chartData.map(item => ({
+        ...item,
+        time: item.time as UTCTimestamp,
+      })));
+
+      resizeObserverRef.current = new ResizeObserver(entries => {
+        if (entries[0] && chartRef.current) {
+          const { width } = entries[0].contentRect;
+          const height = isMobile ? 300 : 600;
+          chartRef.current.applyOptions({
+            width,
+            height,
+          });
+          chartRef.current.timeScale().fitContent();
+        }
+      });
+
+      resizeObserverRef.current.observe(chartContainerRef.current);
+
+      setIsLoading(false);
+
+      return () => {
+        if (resizeObserverRef.current) {
+          resizeObserverRef.current.disconnect();
+        }
+        if (chartRef.current) {
+          chartRef.current.remove();
+          chartRef.current = null;
+        }
+      };
+    } catch (err) {
+      console.error('Chart initialization error:', err);
+      setError('Failed to initialize chart');
+      setIsLoading(false);
+    }
+  }, [chartOptions, isMobile, chartData]);
+
+  useEffect(() => {
+    const cleanup = initChart();
+    return () => cleanup?.();
+  }, [initChart]);
+
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 640);
+      const newIsMobile = window.innerWidth < 640;
+      if (newIsMobile !== isMobile) {
+        setIsMobile(newIsMobile);
+      }
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [isMobile]);
 
-  useEffect(() => {
+  // 处理时间间隔变化
+  const handleIntervalChange = useCallback((newInterval: string) => {
     setIsLoading(true);
-    setError(null);
-    
-    const container = document.getElementById('tradingview_chart');
-    if (!container) {
-      setError('Chart container not found');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      container.innerHTML = '';
-
-      const config = {
-        autosize: true,
-        symbol: token.symbol,
-        interval: interval === "1h" ? "60" : interval,
-        timezone: "Etc/UTC",
-        theme: theme === 'dark' ? 'dark' : 'light',
-        style: "1",
-        locale: "en",
-        enable_publishing: false,
-        hide_legend: !isMobile,
-        hide_side_toolbar: isMobile,
-        allow_symbol_change: false,
-        save_image: false,
-        container_id: "tradingview_chart",
-        library_path: "/charting_library/",
-        fullscreen: false,
-        height: isMobile ? 300 : 600,
-        studies_overrides: {},
-        disabled_features: [
-          "header_symbol_search",
-          "header_settings",
-          "header_compare",
-          "header_undo_redo",
-          "header_screenshot",
-          "header_saveload",
-          "create_volume_indicator_by_default",
-        ],
-        enabled_features: [
-          "use_localstorage_for_settings",
-        ],
-        charts_storage_url: 'https://saveload.tradingview.com',
-        client_id: 'tradingview.com',
-        user_id: 'public_user',
-        datafeed: {
-          onReady: (callback: any) => {
-            callback({
-              supported_resolutions: ["5", "15", "60", "240", "D", "W"],
-              supports_time: true,
-              supports_marks: false,
-              supports_timescale_marks: false,
-            });
-          },
-          searchSymbols: () => {},
-          resolveSymbol: (_symbolName: string, onSymbolResolvedCallback: any) => {
-            onSymbolResolvedCallback({
-              name: token.symbol,
-              full_name: token.symbol,
-              description: token.name,
-              type: "crypto",
-              session: "24x7",
-              timezone: "Etc/UTC",
-              exchange: "",
-              listed_exchange: "",
-              minmov: 1,
-              pricescale: 10000,
-              has_intraday: true,
-              has_daily: true,
-              has_weekly_and_monthly: true,
-              supported_resolutions: ["5", "15", "60", "240", "D", "W"],
-              data_status: "streaming",
-              volume_precision: 2,
-            });
-          },
-          getBars: (_symbolInfo: any, _resolution: string, periodParams: any, onHistoryCallback: any, onErrorCallback: any) => {
-            try {
-              const { from, to } = periodParams;
-              
-              const filteredBars = chartData.filter(bar => {
-                return bar.time >= from && bar.time <= to;
-              });
-
-              if (filteredBars.length > 0) {
-                onHistoryCallback(filteredBars, { noData: false });
-              } else {
-                onHistoryCallback([], { noData: true });
-              }
-            } catch (error) {
-              console.error('Error in getBars:', error);
-              onErrorCallback(error);
-            }
-          },
-          subscribeBars: () => {},
-          unsubscribeBars: () => {},
-        },
-      };
-
-      const script = document.createElement('script');
-      script.src = 'https://s3.tradingview.com/tv.js';
-      script.async = true;
-      script.onload = () => {
-        if (window.TradingView) {
-          try {
-            new window.TradingView.widget(config);
-            setIsLoading(false);
-          } catch (error) {
-            setError('Failed to initialize chart');
-            setIsLoading(false);
-          }
-        }
-      };
-      script.onerror = () => {
-        setError('Failed to load TradingView library');
-        setIsLoading(false);
-      };
-
-      document.head.appendChild(script);
-
-      return () => {
-        container.innerHTML = '';
-        const existingScript = document.querySelector('script[src="https://s3.tradingview.com/tv.js"]');
-        if (existingScript) {
-          document.head.removeChild(existingScript);
-        }
-      };
-    } catch (error) {
-      setError('Chart initialization failed');
-      setIsLoading(false);
-    }
-  }, [theme, interval, token.symbol, isMobile, chartData]);
+    setInterval(newInterval);
+  }, []);
 
   return (
     <Card className="border-muted/40 dark:border-muted/20 w-full">
@@ -184,13 +185,13 @@ export function ChartView({ token }: ChartViewProps) {
           <CardTitle className="text-base">Price Chart</CardTitle>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
             <div className="grid grid-cols-3 sm:flex gap-1 w-full sm:w-auto">
-              {intervals.map((item) => (
+              {intervals.map((item: IntervalOption) => (
                 <Button
                   key={item.value}
                   variant={interval === item.value ? "default" : "ghost"}
                   size="sm"
                   className="h-7 px-2 text-xs font-mono"
-                  onClick={() => setInterval(item.value)}
+                  onClick={() => handleIntervalChange(item.value)}
                 >
                   {item.label}
                 </Button>
@@ -202,16 +203,22 @@ export function ChartView({ token }: ChartViewProps) {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        {isLoading && <div>加载中...</div>}
-        {error && <div className="text-red-500">{error}</div>}
+      <CardContent className="p-0 sm:p-6">
+        {isLoading && (
+          <div className="flex items-center justify-center h-[300px] sm:h-[600px]">
+            <div className="animate-pulse-subtle">加载中...</div>
+          </div>
+        )}
+        {error && (
+          <div className="flex items-center justify-center h-[300px] sm:h-[600px] text-red-500">
+            {error}
+          </div>
+        )}
         <div 
-          id="tradingview_chart"
-          className="w-full rounded-lg overflow-hidden"
+          ref={chartContainerRef}
+          className="tradingview-chart-container"
           style={{ 
-            height: isMobile ? '300px' : '600px',
-            backgroundColor: theme === 'dark' ? "#1a1b1e" : "#ffffff",
-            display: isLoading || error ? 'none' : 'block'
+            display: isLoading || error ? 'none' : 'block',
           }}
         />
       </CardContent>
