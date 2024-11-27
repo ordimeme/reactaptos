@@ -64,13 +64,13 @@ export function TradesView({
     <div className="space-y-4" ref={tradesRef}>
       <div className="rounded-lg border border-muted/40 dark:border-muted/20 overflow-hidden">
         {/* 表头 */}
-        <div className="grid grid-cols-6 gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm text-muted-foreground bg-muted/5">
-          <div className="col-span-1">Account</div>
-          <div className="col-span-1">Type</div>
-          <div className="col-span-1 text-right">Amount ({token.symbol})</div>
-          <div className="col-span-1 text-right">Amount (APT)</div>
-          <div className="col-span-1 text-right">Time</div>
-          <div className="col-span-1 text-right">{isMobile ? 'Txs' : 'Transaction'}</div>
+        <div className="grid grid-cols-[1.5fr,0.8fr,1fr,1fr,1fr,1.2fr] gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm text-muted-foreground bg-muted/5">
+          <div>Account</div>
+          <div className="flex justify-start">Type</div>
+          <div className="text-right">Amount ({token.symbol})</div>
+          <div className="text-right">Amount (APT)</div>
+          <div className="text-right">Time</div>
+          <div className="text-right">{isMobile ? 'Txs' : 'Transaction'}</div>
         </div>
         
         {/* 交易列表 */}
@@ -79,7 +79,7 @@ export function TradesView({
             .map((trade, index) => (
             <div 
               key={index} 
-              className="grid grid-cols-6 gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm hover:bg-muted/5 transition-colors"
+              className="grid grid-cols-[1.5fr,0.8fr,1fr,1fr,1fr,1.2fr] gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm hover:bg-muted/5 transition-colors"
             >
               {/* 账户地址 */}
               <div className="col-span-1 flex items-center gap-0.5 md:gap-1">
@@ -97,7 +97,7 @@ export function TradesView({
               </div>
               
               {/* 交易类型 */}
-              <div className="col-span-1">
+              <div className="flex justify-start">
                 <span className={`px-1.5 md:px-2 py-0.5 rounded-full text-[10px] md:text-xs font-medium ${
                   trade.type === 'buy' 
                     ? 'bg-green-500/20 text-green-500' 

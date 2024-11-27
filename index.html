@@ -19,5 +19,15 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/frontend/main.tsx"></script>
+    <script>
+      // 防止钱包扩展修改 window.ethereum 属性导致的错误
+      if (typeof window.ethereum === 'undefined') {
+        Object.defineProperty(window, 'ethereum', {
+          value: null,
+          writable: true,
+          configurable: true
+        });
+      }
+    </script>
   </body>
 </html>
