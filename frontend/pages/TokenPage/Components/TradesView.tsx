@@ -58,20 +58,20 @@ export function TradesView({ token }: TradesViewProps) {
   const currentTrades = token.trades.slice(startIndex, startIndex + TRADES_PER_PAGE);
 
   return (
-    <div className="space-y-4" ref={tradesRef}>
-      {/* 添加页码信息显示 */}
-      <div className="text-sm text-muted-foreground">
+    <div className="-mx-2 sm:mx-0 space-y-4" ref={tradesRef}>
+      {/* 页码信息显示 - 调整内边距 */}
+      <div className="text-sm text-muted-foreground px-4 sm:px-0">
         Showing {startIndex + 1} to {Math.min(startIndex + TRADES_PER_PAGE, token.trades.length)} of {token.trades.length} trades
       </div>
 
       <div className="overflow-x-auto">
         <div className="min-w-[600px]">
-          <div className="rounded-lg border border-muted/40 dark:border-muted/20 overflow-hidden">
+          <div className="rounded-none sm:rounded-lg border-x-0 sm:border-x border-t border-b border-muted/40 dark:border-muted/20 overflow-hidden">
             {/* 表头 */}
             <div className="grid grid-cols-[2fr,2fr,1.5fr] gap-0.5 md:gap-2 p-2 md:p-3 text-xs md:text-sm text-muted-foreground bg-muted/5">
-              <div>Account</div>
+              <div className="pl-4 sm:pl-2">Account</div>
               <div>Amount</div>
-              <div className="text-right">Transaction</div>
+              <div className="text-right pr-4 sm:pr-2">Transaction</div>
             </div>
             
             {/* 交易列表 */}
@@ -82,7 +82,7 @@ export function TradesView({ token }: TradesViewProps) {
                   className="grid grid-cols-[2fr,2fr,1.5fr] gap-0.5 md:gap-2 p-2 md:p-3 text-xs md:text-sm hover:bg-muted/5 transition-colors"
                 >
                   {/* 账户地址 */}
-                  <div className="flex items-center gap-0.5 md:gap-1">
+                  <div className="flex items-center gap-0.5 md:gap-1 pl-4 sm:pl-2">
                     <span className="font-mono truncate">
                       {truncateAddress(trade.account)}
                     </span>
@@ -122,7 +122,7 @@ export function TradesView({ token }: TradesViewProps) {
                   </div>
 
                   {/* 交易哈希 */}
-                  <div className="text-right font-mono flex items-center justify-end gap-0.5 md:gap-1">
+                  <div className="text-right font-mono flex items-center justify-end gap-0.5 md:gap-1 pr-4 sm:pr-2">
                     <a 
                       href={`https://explorer.aptoslabs.com/txn/${trade.txHash}?network=mainnet`}
                       target="_blank"
@@ -148,14 +148,16 @@ export function TradesView({ token }: TradesViewProps) {
         </div>
       </div>
 
-      {/* 分页器 */}
+      {/* 分页器 - 调整内边距 */}
       {totalPages > 1 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          scrollToRef={tradesRef}
-        />
+        <div className="px-4 sm:px-0">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            scrollToRef={tradesRef}
+          />
+        </div>
       )}
     </div>
   );
