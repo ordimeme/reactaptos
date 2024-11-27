@@ -4,6 +4,7 @@ import { Button } from "./ui/button"
 import { useState } from "react"
 import { truncateAddress, getFullAddress } from "@/utils/truncateAddress"
 import { useToast } from "./ui/use-toast"
+import { ProgressRing } from "./ProgressRing"
 
 interface CardProps {
   item: MarketItem
@@ -79,7 +80,7 @@ const Card = ({ item }: CardProps) => {
           <p className="text-sm text-muted-foreground">{item.symbol}</p>
         </div>
         <div className="text-right">
-          <p className="font-semibold text-base">${item.price.toFixed(2)}</p>
+          <p className="font-semibold text-base">MCap: ${item.marketCap.toLocaleString()}</p>
           <p className={`text-sm ${item.priceChange24h >= 0 ? "text-green-500" : "text-red-500"}`}>
             ({item.priceChange24h >= 0 ? "+" : ""}{item.priceChange24h.toFixed(2)}% 24h)
           </p>
@@ -103,9 +104,12 @@ const Card = ({ item }: CardProps) => {
         <span className="text-sm text-muted-foreground ml-auto">{formatTime(item.timestamp)}</span>
       </div>
 
-      {/* Bonding Progress & Comments */}
+      {/* Progress & Comments */}
       <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-        <span>{item.bondingProgress}% Bonding</span>
+        <div className="flex items-center gap-2">
+          <ProgressRing progress={item.bondingProgress} size={14} strokeWidth={2} />
+          <span>{item.bondingProgress}%</span>
+        </div>
         <div className="flex items-center gap-1.5">
           <MessageCircle className="h-4 w-4" />
           <span>{item.comments.length}</span>

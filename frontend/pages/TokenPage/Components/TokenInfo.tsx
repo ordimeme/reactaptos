@@ -1,90 +1,22 @@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { MarketItem } from "@/data/marketData";
-import { Copy, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
 import { FaDiscord, FaTelegram } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
-import { truncateAddress, getFullAddress } from "@/utils/truncateAddress";
-import { cn } from "@/lib/utils";
+import { truncateAddress } from "@/utils/truncateAddress";
 
 interface TokenInfoProps {
   token: MarketItem;
 }
 
 export function TokenInfo({ token }: TokenInfoProps) {
-  const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
   const visibleHolders = token.holders.slice(0, 20);
 
-  // 处理复制地址
-  const handleCopyCA = async (address: string) => {
-    try {
-      await navigator.clipboard.writeText(getFullAddress(address));
-      toast({
-        title: "Success",
-        description: "Address has been copied to clipboard",
-      });
-    } catch (err) {
-      console.error('Failed to copy:', err);
-      toast({
-        title: "Failed",
-        description: "Failed to copy address",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="space-y-6 px-2 md:px-4">
-      {/* Token 基本信息 */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl overflow-hidden">
-            <img 
-              src={token.imageUrl} 
-              alt={token.name} 
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">{token.name}</h1>
-            <div className="flex items-center gap-2">
-              <span className="text-sm md:text-base text-muted-foreground">{token.symbol}</span>
-              <span className="text-sm text-muted-foreground">ca:</span>
-              <span className="font-mono text-sm">{truncateAddress(token.creator)}</span>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6 hover:bg-muted"
-                onClick={() => handleCopyCA(token.creator)}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-        
-        {/* 价格信息 */}
-        <div className="flex flex-col items-end gap-1">
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl md:text-3xl font-bold">${token.price.toFixed(2)}</span>
-            <span className={cn(
-              "text-sm md:text-base font-semibold",
-              token.priceChange24h >= 0 ? "text-green-500" : "text-red-500"
-            )}>
-              {token.priceChange24h >= 0 ? "+" : ""}{token.priceChange24h}%
-            </span>
-            <span className="text-xs text-muted-foreground">24h</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
-            <span>Market Cap:</span>
-            <span>${token.marketCap.toLocaleString()}</span>
-          </div>
-        </div>
-      </div>
-
       {/* About */}
       <div>
         <h3 className="text-sm font-semibold mb-2">About</h3>

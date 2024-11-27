@@ -14,7 +14,7 @@
   :root,
   [theme="light"] {
     --background: 0 0% 100%;
-    --softBg: #E8EDF3;
+    --softBg: rgba(248, 250, 252, 0.8);
     --foreground: 240 10% 3.9%;
 
     --card: 0 0% 100%;
@@ -48,7 +48,7 @@
 
   [theme="dark"] {
     --background: 240 10% 3.9%;
-    --softBg: #121219;
+    --softBg: rgba(17, 18, 23, 0.5);
     --foreground: 0 0% 98%;
 
     --card: 240 10% 3.9%;
