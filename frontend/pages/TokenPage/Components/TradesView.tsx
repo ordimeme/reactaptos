@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { MarketItem } from "@/data/marketData"
+import { truncateAddress, getFullAddress } from "@/utils/truncateAddress"
+import { Copy } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 
 interface TradesViewProps {
   token: MarketItem;
@@ -14,6 +17,25 @@ export function TradesView({
   handleLoadMoreTrades,
   formatTime
 }: TradesViewProps) {
+  const { toast } = useToast();
+
+  const handleCopyAddress = async (address: string) => {
+    try {
+      await navigator.clipboard.writeText(getFullAddress(address));
+      toast({
+        title: "Success",
+        description: "Address has been copied to clipboard",
+      });
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      toast({
+        title: "Failed",
+        description: "Failed to copy address",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-muted/40 dark:border-muted/20 overflow-hidden">
@@ -35,8 +57,16 @@ export function TradesView({
               className="grid grid-cols-6 gap-2 p-3 text-sm hover:bg-muted/5 transition-colors"
             >
               {/* 账户地址 */}
-              <div className="font-mono text-xs truncate">
-                {trade.account}
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs">{truncateAddress(trade.account)}</span>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-5 w-5 hover:bg-muted"
+                  onClick={() => handleCopyAddress(trade.account)}
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
               </div>
               
               {/* 交易类型 */}

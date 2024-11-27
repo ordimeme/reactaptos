@@ -34,7 +34,7 @@ export function Header() {
 
   return (
     //logo area
-    <div className="px-4 h-[100px] flex items-center justify-between">
+    <div className="px-4 h-[100px] flex items-center justify-between max-w-[1400px] mx-auto w-full">
       <div className="flex-1">
         <Link to="/markets" className="flex items-center gap-4">
           <img 
@@ -43,7 +43,7 @@ export function Header() {
             title='React + Aptos'
             className="h-12 w-auto pl-2"
           />
-          <h1 className="font-bold text-2xl md:text-4xl hidden md:block">ReactAptos</h1>
+          <h1 className="font-bold text-2xl md:text-4xl hidden md:block">Aptostar</h1>
         </Link>
       </div>
     
@@ -78,7 +78,7 @@ export function Header() {
             value={selectedNetwork}
             onValueChange={setSelectedNetwork}
           >
-            <SelectTrigger className="w-[100px] md:w-[180px]">
+            <SelectTrigger className="w-[120px] md:w-[160px]">
               <SelectValue>{selectedNetwork}</SelectValue>
             </SelectTrigger>
             <SelectContent>

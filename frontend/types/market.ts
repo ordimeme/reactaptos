@@ -1,5 +1,5 @@
 export interface Comment {
-  id: number;
+  id: string;
   user: string;
   avatar: string;
   content: string;
@@ -8,12 +8,13 @@ export interface Comment {
 
 export interface Holder {
   address: string;
+  balance: number;
   percentage: number;
-  type?: string;
+  type: string;
 }
 
 export interface Trade {
-  id: number;
+  id: string;
   account: string;
   type: "buy" | "sell";
   aptAmount: number;
@@ -38,4 +39,8 @@ export interface MarketItem {
   comments: Comment[];
   holders: Holder[];
   trades: Trade[];
+  twitter?: string;
+  discord?: string;
+  telegram?: string;
+  priceChange24h: number;
 } 

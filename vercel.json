@@ -27,7 +27,7 @@
   ],
   "images": {
     "domains": ["*.deinvest.com"],
-    "formats": ["image/avif", "image/webp", "image/svg+xml"],
+    "formats": ["image/avif", "image/webp"],
     "minimumCacheTTL": 60
   }
 } 

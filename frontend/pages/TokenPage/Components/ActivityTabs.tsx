@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { MarketItem } from "@/data/marketData"
+import { truncateAddress, getFullAddress } from "@/utils/truncateAddress"
+import { Copy } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 
 interface ActivityTabsProps {
   token: MarketItem;
@@ -31,9 +34,23 @@ export function ActivityTabs({
   handleSubmitComment,
   formatTime
 }: ActivityTabsProps) {
-  // 生成随机地址的函数
-  const generateRandomAddress = () => {
-    return `0x${Math.random().toString(36).substring(2, 8)}...${Math.random().toString(36).substring(2, 8)}`;
+  const { toast } = useToast();
+
+  const handleCopyAddress = async (address: string) => {
+    try {
+      await navigator.clipboard.writeText(getFullAddress(address));
+      toast({
+        title: "Success",
+        description: "Address has been copied to clipboard",
+      });
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      toast({
+        title: "Failed",
+        description: "Failed to copy address",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -73,9 +90,17 @@ export function ActivityTabs({
               <div className="flex items-start gap-3">
                 <div className="flex-1 space-y-1">
                   <div className="flex justify-between">
-                    <span className="font-mono text-sm text-muted-foreground">
-                      {generateRandomAddress()}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs">{truncateAddress(comment.user)}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-5 w-5 hover:bg-muted"
+                        onClick={() => handleCopyAddress(comment.user)}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
                     <span className="text-sm text-muted-foreground">
                       {formatTime(comment.timestamp)}
                     </span>

@@ -1,7 +1,123 @@
-// ... 其他代码保持不变
+export interface Comment {
+  id: string;
+  user: string;
+  avatar: string;
+  content: string;
+  timestamp: string;
+  author: string;
+}
 
-// 简化的市场数据，包含所有代币的基本信息
-const tokenList = [
+export interface Trade {
+  id: string;
+  account: string;
+  type: "buy" | "sell";
+  aptAmount: number;
+  tokenAmount: number;
+  timestamp: string;
+  txHash: string;
+  trader: string;
+}
+
+export interface Holder {
+  address: string;
+  balance: number;
+  percentage: number;
+  type: string;
+}
+
+export interface MarketItem {
+  id: string;
+  name: string;
+  symbol: string;
+  price: number;
+  imageUrl: string;
+  creator: string;
+  description: string;
+  timestamp: string;
+  marketCap: number;
+  bondingProgress: number;
+  kingProgress: number;
+  dethroneCap: number;
+  comments: Comment[];
+  holders: Holder[];
+  trades: Trade[];
+  twitter?: string;
+  discord?: string;
+  telegram?: string;
+  priceChange24h: number;
+}
+
+function generateTradesWithVariedTimestamps(count: number, priceRange: { min: number; max: number }): Trade[] {
+  return Array.from({ length: count }, (_, i) => {
+    const tradeTime = new Date(Date.now() - i * (Math.random() * 1000 * 60 * 60 * 24));
+    const price = Number((Math.random() * (priceRange.max - priceRange.min) + priceRange.min).toFixed(2));
+    const tradeType: "buy" | "sell" = Math.random() > 0.5 ? "buy" : "sell";
+    const account = `0x${Math.random().toString(36).substring(2, 8)}...${Math.random().toString(36).substring(2, 8)}`;
+
+    return {
+      id: `trade_${i + 1}`,
+      account,
+      type: tradeType,
+      aptAmount: price,
+      tokenAmount: Number((Math.random() * 50).toFixed(2)),
+      timestamp: tradeTime.toISOString(),
+      txHash: `0x${Math.random().toString(36).substring(2, 15)}`,
+      trader: account
+    };
+  }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+}
+
+function generateComments(count: number, timeRange: number): Comment[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: `comment_${i + 1}`,
+    user: `User${Math.floor(Math.random() * 1000)}`,
+    avatar: `/avatars/avatar${Math.floor(Math.random() * 10) + 1}.png`,
+    content: `This is comment ${i + 1}. ${Math.random() > 0.5 ? '🚀 To the moon!' : '💎 Diamond hands!'}`,
+    timestamp: new Date(Date.now() - Math.random() * timeRange).toISOString(),
+    author: `User${Math.floor(Math.random() * 1000)}`
+  })).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+}
+
+function generateHolders(count: number, bondingCurvePercentage: number): Holder[] {
+  const holders = Array.from({ length: count }, (_, i) => ({
+    address: `0x${Math.random().toString(36).substring(2, 8)}...${Math.random().toString(36).substring(2, 8)}`,
+    balance: Math.random() * 1000000,
+    percentage: Number((Math.random() * 10 + 1).toFixed(2)),
+    type: i === 0 ? "bonding curve" : "regular"
+  }));
+  
+  holders[0].percentage = bondingCurvePercentage;
+  return holders;
+}
+
+function generateTestTimestamps() {
+  const now = new Date();
+  return {
+    seconds: new Date(now.getTime() - 45 * 1000).toISOString(),
+    minutes: new Date(now.getTime() - 15 * 60 * 1000).toISOString(),
+    hours: new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString(),
+    days: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    weeks: new Date(now.getTime() - 2 * 7 * 24 * 60 * 60 * 1000).toISOString(),
+    months: new Date(now.getTime() - 3 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    years: new Date(now.getTime() - 400 * 24 * 60 * 60 * 1000).toISOString(),
+  };
+}
+
+const timestamps = generateTestTimestamps();
+const creators = [
+  "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+  "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+  "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+  "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+  "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc",
+  "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+  "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+  "0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f",
+  "0xa0Ee7A142d267C1f36714E4a8F75612F20a79720"
+];
+
+export const tokenList = [
   { name: "Woodstock", symbol: "WOODSTOCK", imageUrl: "/tokens/woodstock.svg" },
   { name: "Doge Plus", symbol: "DOGE+", imageUrl: "/tokens/doge.svg" },
   { name: "Crypto Cat", symbol: "CCAT", imageUrl: "/tokens/ccat.svg" },
@@ -38,110 +154,6 @@ const tokenList = [
   { name: "Storm Cloud", symbol: "STRM", imageUrl: "/tokens/strm.svg" }
 ];
 
-export default { tokenList };
-
-export interface Comment {
-  id: number;
-  user: string;
-  avatar: string;
-  content: string;
-  timestamp: string;
-}
-
-export interface Holder {
-  address: string;
-  percentage: number;
-  type?: string;
-}
-
-export interface Trade {
-  id: number;
-  account: string;
-  type: "buy" | "sell";
-  aptAmount: number;
-  tokenAmount: number;
-  timestamp: string;
-  txHash: string;
-}
-
-export interface MarketItem {
-  id: string;
-  name: string;
-  symbol: string;
-  price: number;
-  imageUrl: string;
-  creator: string;
-  description: string;
-  timestamp: string;
-  marketCap: number;
-  bondingProgress: number;
-  kingProgress: number;
-  dethroneCap: number;
-  comments: Comment[];
-  holders: Holder[];
-  trades: Trade[];
-}
-
-// 生成不同时间跨度的测试数据
-function generateTestTimestamps() {
-  const now = new Date();
-  return {
-    seconds: new Date(now.getTime() - 45 * 1000).toISOString(), // 45秒前
-    minutes: new Date(now.getTime() - 15 * 60 * 1000).toISOString(), // 15分钟前
-    hours: new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString(), // 4小时前
-    days: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3天前
-    weeks: new Date(now.getTime() - 2 * 7 * 24 * 60 * 60 * 1000).toISOString(), // 2周前
-    months: new Date(now.getTime() - 3 * 30 * 24 * 60 * 60 * 1000).toISOString(), // 3个月前
-    years: new Date(now.getTime() - 400 * 24 * 60 * 60 * 1000).toISOString(), // 超过1年
-  };
-}
-
-// 生成交易记录
-function generateTradesWithVariedTimestamps(count: number, priceRange: { min: number; max: number }): Trade[] {
-  return Array.from({ length: count }, (_, i) => {
-    const tradeTime = new Date(Date.now() - i * (Math.random() * 1000 * 60 * 60 * 24));
-    const price = Number((Math.random() * (priceRange.max - priceRange.min) + priceRange.min).toFixed(2));
-    const tradeType: "buy" | "sell" = Math.random() > 0.5 ? "buy" : "sell";
-
-    return {
-      id: i + 1,
-      account: `0x${Math.random().toString(36).substring(2, 8)}...${Math.random().toString(36).substring(2, 8)}`,
-      type: tradeType,
-      aptAmount: price,
-      tokenAmount: Number((Math.random() * 50).toFixed(2)),
-      timestamp: tradeTime.toISOString(),
-      txHash: `0x${Math.random().toString(36).substring(2, 15)}`
-    };
-  }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-}
-
-// 生成评论
-function generateComments(count: number, timeRange: number) {
-  return Array.from({ length: count }, (_, i) => ({
-    id: i + 1,
-    user: `User${Math.floor(Math.random() * 1000)}`,
-    avatar: `/avatars/avatar${Math.floor(Math.random() * 10) + 1}.png`,
-    content: `This is comment ${i + 1}. ${Math.random() > 0.5 ? '🚀 To the moon!' : '💎 Diamond hands!'}`,
-    timestamp: new Date(Date.now() - Math.random() * timeRange).toISOString()
-  })).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-}
-
-// 生成持有者数据
-function generateHolders(count: number, bondingCurvePercentage: number) {
-  const holders = Array.from({ length: count }, (_, i) => ({
-    address: `0x${Math.random().toString(36).substring(2, 8)}...${Math.random().toString(36).substring(2, 8)}`,
-    percentage: Number((Math.random() * 10 + 1).toFixed(2)),
-    type: i === 0 ? "(bonding curve)" : undefined
-  }));
-  
-  // 确保绑定曲线的百分比正确
-  holders[0].percentage = bondingCurvePercentage;
-  return holders;
-}
-
-const timestamps = generateTestTimestamps();
-
-// 示例数据生成
 export const marketData: MarketItem[] = [
   // 0-25% 组 (8个)
   {
@@ -150,7 +162,7 @@ export const marketData: MarketItem[] = [
     symbol: "WOODSTOCK",
     price: 500.00,
     imageUrl: "/tokens/woodstock.svg",
-    creator: "0x1234...5678",
+    creator: creators[0],
     description: "Woodstock is a fictional character in Charles M. Schulz's comic strip Peanuts.",
     timestamp: timestamps.seconds,
     marketCap: 6900,
@@ -160,6 +172,10 @@ export const marketData: MarketItem[] = [
     comments: generateComments(10, 24 * 60 * 60 * 1000),
     holders: generateHolders(30, 15),
     trades: generateTradesWithVariedTimestamps(50, { min: 450, max: 550 }),
+    twitter: "https://twitter.com/woodstock",
+    discord: "https://discord.gg/woodstock",
+    telegram: "https://t.me/woodstock",
+    priceChange24h: 12.5,
   },
   {
     id: "2",
@@ -167,7 +183,7 @@ export const marketData: MarketItem[] = [
     symbol: "DOGE+",
     price: 320.50,
     imageUrl: "/tokens/DOGE+.svg",
-    creator: "0xdoge...plus",
+    creator: creators[1],
     description: "Much wow, very plus!",
     timestamp: timestamps.minutes,
     marketCap: 12000,
@@ -177,6 +193,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(15, 12 * 60 * 60 * 1000),
     holders: generateHolders(25, 8),
     trades: generateTradesWithVariedTimestamps(40, { min: 300, max: 350 }),
+    priceChange24h: -5.2,
   },
   // ... 继续添加6个 0-25% 区间的代币
 
@@ -187,7 +204,7 @@ export const marketData: MarketItem[] = [
     symbol: "PEPE",
     price: 420.69,
     imageUrl: "/tokens/PEPE.svg",
-    creator: "0xabcd...efgh",
+    creator: creators[2],
     description: "The original meme token that started it all",
     timestamp: timestamps.hours,
     marketCap: 93729,
@@ -197,6 +214,9 @@ export const marketData: MarketItem[] = [
     comments: generateComments(25, 7 * 24 * 60 * 60 * 1000),
     holders: generateHolders(45, 35),
     trades: generateTradesWithVariedTimestamps(100, { min: 400, max: 450 }),
+    twitter: "https://twitter.com/pepeclassic",
+    telegram: "https://t.me/pepeclassic",
+    priceChange24h: 8.9,
   },
   {
     id: "10",
@@ -204,7 +224,7 @@ export const marketData: MarketItem[] = [
     symbol: "MOON",
     price: 888.88,
     imageUrl: "/tokens/MOON.svg",
-    creator: "0xmoon...shot",
+    creator: creators[3],
     description: "To the moon and beyond!",
     timestamp: timestamps.days,
     marketCap: 150000,
@@ -214,6 +234,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(30, 14 * 24 * 60 * 60 * 1000),
     holders: generateHolders(60, 42),
     trades: generateTradesWithVariedTimestamps(120, { min: 800, max: 900 }),
+    priceChange24h: 10.5,
   },
   // ... 继续添加6个 25-50% 区间的代币
 
@@ -224,7 +245,7 @@ export const marketData: MarketItem[] = [
     symbol: "DIAM",
     price: 1337.00,
     imageUrl: "/tokens/DIAM.svg",
-    creator: "0xdiam...hand",
+    creator: creators[4],
     description: "HODL forever! 💎🙌",
     timestamp: timestamps.weeks,
     marketCap: 250000,
@@ -234,6 +255,9 @@ export const marketData: MarketItem[] = [
     comments: generateComments(40, 30 * 24 * 60 * 60 * 1000),
     holders: generateHolders(80, 68),
     trades: generateTradesWithVariedTimestamps(150, { min: 1200, max: 1400 }),
+    twitter: "https://twitter.com/diamondhands",
+    discord: "https://discord.gg/diamondhands",
+    priceChange24h: 12.2,
   },
   // ... 继续添加7个 50-75% 区间的代币
 
@@ -244,7 +268,7 @@ export const marketData: MarketItem[] = [
     symbol: "FUEL",
     price: 2500.00,
     imageUrl: "/tokens/FUEL.svg",
-    creator: "0xrock...fuel",
+    creator: creators[5],
     description: "Powering the next generation of memes",
     timestamp: timestamps.months,
     marketCap: 500000,
@@ -254,6 +278,9 @@ export const marketData: MarketItem[] = [
     comments: generateComments(50, 60 * 24 * 60 * 60 * 1000),
     holders: generateHolders(100, 92),
     trades: generateTradesWithVariedTimestamps(200, { min: 2300, max: 2700 }),
+    discord: "https://discord.gg/rocketfuel",
+    telegram: "https://t.me/rocketfuel",
+    priceChange24h: 15.3,
   },
   // ... 继续添加5个 75-100% 区间的代币
 
@@ -264,7 +291,7 @@ export const marketData: MarketItem[] = [
     symbol: "CCAT",
     price: 245.75,
     imageUrl: "/tokens/CCAT.svg",
-    creator: "0xccat...meow",
+    creator: creators[6],
     description: "The purr-fect token for cat lovers!",
     timestamp: timestamps.hours,
     marketCap: 15000,
@@ -274,6 +301,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(20, 36 * 60 * 60 * 1000),
     holders: generateHolders(35, 12),
     trades: generateTradesWithVariedTimestamps(60, { min: 220, max: 270 }),
+    priceChange24h: 11.2,
   },
   {
     id: "4",
@@ -281,7 +309,7 @@ export const marketData: MarketItem[] = [
     symbol: "BOLT",
     price: 180.25,
     imageUrl: "/tokens/BOLT.svg",
-    creator: "0xbolt...fast",
+    creator: creators[7],
     description: "Lightning fast DeFi solutions",
     timestamp: timestamps.days,
     marketCap: 18500,
@@ -291,6 +319,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(25, 48 * 60 * 60 * 1000),
     holders: generateHolders(40, 20),
     trades: generateTradesWithVariedTimestamps(70, { min: 160, max: 200 }),
+    priceChange24h: 13.5,
   },
   {
     id: "5",
@@ -298,7 +327,7 @@ export const marketData: MarketItem[] = [
     symbol: "DAWN",
     price: 156.80,
     imageUrl: "/tokens/DAWN.svg",
-    creator: "0xdawn...rise",
+    creator: creators[8],
     description: "A new dawn for decentralized gaming",
     timestamp: timestamps.weeks,
     marketCap: 21000,
@@ -308,6 +337,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(30, 72 * 60 * 60 * 1000),
     holders: generateHolders(45, 18),
     trades: generateTradesWithVariedTimestamps(80, { min: 140, max: 170 }),
+    priceChange24h: 14.8,
   },
   {
     id: "6",
@@ -315,7 +345,7 @@ export const marketData: MarketItem[] = [
     symbol: "FLOW",
     price: 135.90,
     imageUrl: "/tokens/FLOW.svg",
-    creator: "0xflow...move",
+    creator: creators[9],
     description: "Seamless cross-chain liquidity",
     timestamp: timestamps.months,
     marketCap: 24000,
@@ -325,6 +355,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(35, 96 * 60 * 60 * 1000),
     holders: generateHolders(50, 22),
     trades: generateTradesWithVariedTimestamps(90, { min: 120, max: 150 }),
+    priceChange24h: 16.2,
   },
   {
     id: "7",
@@ -332,7 +363,7 @@ export const marketData: MarketItem[] = [
     symbol: "FIRE",
     price: 198.45,
     imageUrl: "/tokens/FIRE.svg",
-    creator: "0xfire...burn",
+    creator: creators[0],
     description: "Burning through barriers in DeFi",
     timestamp: timestamps.minutes,
     marketCap: 27000,
@@ -342,6 +373,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(40, 120 * 60 * 60 * 1000),
     holders: generateHolders(55, 16),
     trades: generateTradesWithVariedTimestamps(100, { min: 180, max: 220 }),
+    priceChange24h: 17.5,
   },
   {
     id: "8",
@@ -349,7 +381,7 @@ export const marketData: MarketItem[] = [
     symbol: "STAR",
     price: 167.30,
     imageUrl: "/tokens/STAR.svg",
-    creator: "0xstar...lite",
+    creator: creators[1],
     description: "Illuminating the path to decentralization",
     timestamp: timestamps.seconds,
     marketCap: 30000,
@@ -359,6 +391,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(45, 144 * 60 * 60 * 1000),
     holders: generateHolders(60, 24),
     trades: generateTradesWithVariedTimestamps(110, { min: 150, max: 180 }),
+    priceChange24h: 18.8,
   },
 
   // 继续添加 25-50% 组的代币
@@ -368,7 +401,7 @@ export const marketData: MarketItem[] = [
     symbol: "META",
     price: 445.60,
     imageUrl: "/tokens/META.svg",
-    creator: "0xmeta...vers",
+    creator: creators[2],
     description: "Building the future of virtual worlds",
     timestamp: timestamps.hours,
     marketCap: 120000,
@@ -378,6 +411,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(50, 168 * 60 * 60 * 1000),
     holders: generateHolders(70, 38),
     trades: generateTradesWithVariedTimestamps(130, { min: 400, max: 480 }),
+    priceChange24h: 20.1,
   },
   // ... 继续添加更多代币数据，直到达到30个
 
@@ -388,7 +422,7 @@ export const marketData: MarketItem[] = [
     symbol: "PIXEL",
     price: 567.80,
     imageUrl: "/tokens/PIXEL.svg",
-    creator: "0xpixl...arts",
+    creator: creators[3],
     description: "NFT meets DeFi in pixel perfection",
     timestamp: timestamps.days,
     marketCap: 135000,
@@ -398,6 +432,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(35, 192 * 60 * 60 * 1000),
     holders: generateHolders(75, 45),
     trades: generateTradesWithVariedTimestamps(140, { min: 520, max: 600 }),
+    priceChange24h: 21.4,
   },
   {
     id: "13",
@@ -405,7 +440,7 @@ export const marketData: MarketItem[] = [
     symbol: "PUNK",
     price: 678.90,
     imageUrl: "/tokens/PUNK.svg",
-    creator: "0xcybr...punk",
+    creator: creators[4],
     description: "Future of digital rebellion",
     timestamp: timestamps.weeks,
     marketCap: 142000,
@@ -415,6 +450,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(42, 216 * 60 * 60 * 1000),
     holders: generateHolders(82, 32),
     trades: generateTradesWithVariedTimestamps(160, { min: 650, max: 700 }),
+    priceChange24h: 22.7,
   },
   {
     id: "14",
@@ -422,7 +458,7 @@ export const marketData: MarketItem[] = [
     symbol: "GLXY",
     price: 789.12,
     imageUrl: "/tokens/GLXY.svg",
-    creator: "0xgalx...qust",
+    creator: creators[5],
     description: "Explore the crypto universe",
     timestamp: timestamps.months,
     marketCap: 158000,
@@ -432,6 +468,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(48, 240 * 60 * 60 * 1000),
     holders: generateHolders(88, 28),
     trades: generateTradesWithVariedTimestamps(180, { min: 750, max: 800 }),
+    priceChange24h: 23.9,
   },
 
   // 50-75% 组的代币
@@ -441,7 +478,7 @@ export const marketData: MarketItem[] = [
     symbol: "QNTM",
     price: 1567.00,
     imageUrl: "/tokens/QNTM.svg",
-    creator: "0xqntm...leap",
+    creator: creators[6],
     description: "Quantum computing meets blockchain",
     timestamp: timestamps.hours,
     marketCap: 280000,
@@ -451,6 +488,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(55, 264 * 60 * 60 * 1000),
     holders: generateHolders(95, 72),
     trades: generateTradesWithVariedTimestamps(220, { min: 1500, max: 1600 }),
+    priceChange24h: 25.2,
   },
   {
     id: "19",
@@ -458,7 +496,7 @@ export const marketData: MarketItem[] = [
     symbol: "SOLR",
     price: 1789.00,
     imageUrl: "/tokens/SOLR.svg",
-    creator: "0xsolr...powr",
+    creator: creators[7],
     description: "Sustainable blockchain energy",
     timestamp: timestamps.days,
     marketCap: 310000,
@@ -468,6 +506,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(62, 288 * 60 * 60 * 1000),
     holders: generateHolders(102, 65),
     trades: generateTradesWithVariedTimestamps(240, { min: 1700, max: 1800 }),
+    priceChange24h: 26.5,
   },
   {
     id: "20",
@@ -475,7 +514,7 @@ export const marketData: MarketItem[] = [
     symbol: "NNET",
     price: 1890.00,
     imageUrl: "/tokens/NNET.svg",
-    creator: "0xneur...nets",
+    creator: creators[8],
     description: "AI-powered DeFi solutions",
     timestamp: timestamps.weeks,
     marketCap: 340000,
@@ -485,6 +524,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(68, 312 * 60 * 60 * 1000),
     holders: generateHolders(108, 58),
     trades: generateTradesWithVariedTimestamps(260, { min: 1800, max: 1900 }),
+    priceChange24h: 27.8,
   },
 
   // 75-100% 组的代币
@@ -494,7 +534,7 @@ export const marketData: MarketItem[] = [
     symbol: "CRAY",
     price: 2890.00,
     imageUrl: "/tokens/CRAY.svg",
-    creator: "0xcray...rays",
+    creator: creators[9],
     description: "Interstellar blockchain technology",
     timestamp: timestamps.days,
     marketCap: 580000,
@@ -504,6 +544,10 @@ export const marketData: MarketItem[] = [
     comments: generateComments(75, 336 * 60 * 60 * 1000),
     holders: generateHolders(115, 88),
     trades: generateTradesWithVariedTimestamps(280, { min: 2800, max: 2900 }),
+    twitter: "https://twitter.com/cosmicray",
+    discord: "https://discord.gg/cosmicray",
+    telegram: "https://t.me/cosmicray",
+    priceChange24h: 29.1,
   },
   {
     id: "27",
@@ -511,7 +555,7 @@ export const marketData: MarketItem[] = [
     symbol: "HOLE",
     price: 3200.00,
     imageUrl: "/tokens/HOLE.svg",
-    creator: "0xhole...void",
+    creator: creators[0],
     description: "The ultimate token sink",
     timestamp: timestamps.weeks,
     marketCap: 650000,
@@ -521,6 +565,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(82, 360 * 60 * 60 * 1000),
     holders: generateHolders(122, 95),
     trades: generateTradesWithVariedTimestamps(300, { min: 3100, max: 3300 }),
+    priceChange24h: 30.4,
   },
   {
     id: "28",
@@ -528,7 +573,7 @@ export const marketData: MarketItem[] = [
     symbol: "TIME",
     price: 3500.00,
     imageUrl: "/tokens/TIME.svg",
-    creator: "0xtime...lock",
+    creator: creators[1],
     description: "Time-based yield optimization",
     timestamp: timestamps.months,
     marketCap: 720000,
@@ -538,6 +583,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(88, 384 * 60 * 60 * 1000),
     holders: generateHolders(128, 85),
     trades: generateTradesWithVariedTimestamps(320, { min: 3400, max: 3600 }),
+    priceChange24h: 31.7,
   },
   {
     id: "29",
@@ -545,7 +591,7 @@ export const marketData: MarketItem[] = [
     symbol: "EDGE",
     price: 3800.00,
     imageUrl: "/tokens/EDGE.svg",
-    creator: "0xedge...infn",
+    creator: creators[2],
     description: "Pushing the boundaries of DeFi",
     timestamp: timestamps.years,
     marketCap: 790000,
@@ -555,6 +601,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(95, 408 * 60 * 60 * 1000),
     holders: generateHolders(135, 82),
     trades: generateTradesWithVariedTimestamps(340, { min: 3700, max: 3900 }),
+    priceChange24h: 33.0,
   },
   {
     id: "30",
@@ -562,7 +609,7 @@ export const marketData: MarketItem[] = [
     symbol: "GEN1",
     price: 4200.00,
     imageUrl: "/tokens/GEN1.svg",
-    creator: "0xgen1...zero",
+    creator: creators[3],
     description: "The beginning of a new era",
     timestamp: timestamps.seconds,
     marketCap: 850000,
@@ -572,6 +619,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(100, 432 * 60 * 60 * 1000),
     holders: generateHolders(142, 78),
     trades: generateTradesWithVariedTimestamps(360, { min: 4000, max: 4400 }),
+    priceChange24h: 34.3,
   },
 
   // 继续添加新的代币数据
@@ -581,7 +629,7 @@ export const marketData: MarketItem[] = [
     symbol: "ADOG",
     price: 1234.56,
     imageUrl: "/tokens/ADOG.svg",
-    creator: "0xastr...dog1",
+    creator: creators[4],
     description: "The first dog in crypto space!",
     timestamp: timestamps.minutes,
     marketCap: 280000,
@@ -591,6 +639,9 @@ export const marketData: MarketItem[] = [
     comments: generateComments(65, 48 * 60 * 60 * 1000),
     holders: generateHolders(95, 45),
     trades: generateTradesWithVariedTimestamps(180, { min: 1200, max: 1300 }),
+    twitter: "https://twitter.com/astrodog",
+    telegram: "https://t.me/astrodog",
+    priceChange24h: 35.6,
   },
   {
     id: "32",
@@ -598,7 +649,7 @@ export const marketData: MarketItem[] = [
     symbol: "CDRG",
     price: 2345.67,
     imageUrl: "/tokens/CDRG.svg",
-    creator: "0xcydr...gon2",
+    creator: creators[5],
     description: "Digital dragons unleashed",
     timestamp: timestamps.hours,
     marketCap: 420000,
@@ -608,6 +659,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(75, 72 * 60 * 60 * 1000),
     holders: generateHolders(110, 68),
     trades: generateTradesWithVariedTimestamps(200, { min: 2300, max: 2400 }),
+    priceChange24h: 36.9,
   },
   {
     id: "33",
@@ -615,7 +667,7 @@ export const marketData: MarketItem[] = [
     symbol: "PRTL",
     price: 890.12,
     imageUrl: "/tokens/PRTL.svg",
-    creator: "0xmgic...prtl",
+    creator: creators[6],
     description: "Your gateway to magical returns",
     timestamp: timestamps.days,
     marketCap: 180000,
@@ -625,6 +677,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(55, 96 * 60 * 60 * 1000),
     holders: generateHolders(85, 32),
     trades: generateTradesWithVariedTimestamps(150, { min: 850, max: 950 }),
+    priceChange24h: 38.2,
   },
   {
     id: "34",
@@ -632,7 +685,7 @@ export const marketData: MarketItem[] = [
     symbol: "PHNX",
     price: 3456.78,
     imageUrl: "/tokens/PHNX.svg",
-    creator: "0xrise...phnx",
+    creator: creators[7],
     description: "Rising from the ashes of old finance",
     timestamp: timestamps.weeks,
     marketCap: 680000,
@@ -642,6 +695,10 @@ export const marketData: MarketItem[] = [
     comments: generateComments(85, 120 * 60 * 60 * 1000),
     holders: generateHolders(125, 88),
     trades: generateTradesWithVariedTimestamps(220, { min: 3400, max: 3500 }),
+    twitter: "https://twitter.com/phoenixrise",
+    discord: "https://discord.gg/phoenixrise",
+    telegram: "https://t.me/phoenixrise",
+    priceChange24h: 39.5,
   },
   {
     id: "35",
@@ -649,7 +706,7 @@ export const marketData: MarketItem[] = [
     symbol: "CRYS",
     price: 567.89,
     imageUrl: "/tokens/CRYS.svg",
-    creator: "0xcrys...core",
+    creator: creators[8],
     description: "Pure crystallized blockchain technology",
     timestamp: timestamps.months,
     marketCap: 145000,
@@ -659,6 +716,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(45, 144 * 60 * 60 * 1000),
     holders: generateHolders(70, 15),
     trades: generateTradesWithVariedTimestamps(130, { min: 550, max: 600 }),
+    priceChange24h: 40.8,
   },
   {
     id: "36",
@@ -666,7 +724,7 @@ export const marketData: MarketItem[] = [
     symbol: "WAVE",
     price: 789.01,
     imageUrl: "/tokens/WAVE.svg",
-    creator: "0xwave...flow",
+    creator: creators[9],
     description: "Riding the waves of DeFi innovation",
     timestamp: timestamps.seconds,
     marketCap: 195000,
@@ -676,6 +734,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(60, 168 * 60 * 60 * 1000),
     holders: generateHolders(88, 28),
     trades: generateTradesWithVariedTimestamps(160, { min: 750, max: 800 }),
+    priceChange24h: 42.1,
   },
   {
     id: "37",
@@ -683,7 +742,7 @@ export const marketData: MarketItem[] = [
     symbol: "DGLD",
     price: 4567.89,
     imageUrl: "/tokens/DGLD.svg",
-    creator: "0xgold...sand",
+    creator: creators[0],
     description: "Digital gold from the crypto desert",
     timestamp: timestamps.minutes,
     marketCap: 820000,
@@ -693,6 +752,9 @@ export const marketData: MarketItem[] = [
     comments: generateComments(95, 192 * 60 * 60 * 1000),
     holders: generateHolders(140, 92),
     trades: generateTradesWithVariedTimestamps(240, { min: 4500, max: 4600 }),
+    discord: "https://discord.gg/desertgold",
+    telegram: "https://t.me/desertgold",
+    priceChange24h: 43.4,
   },
   {
     id: "38",
@@ -700,7 +762,7 @@ export const marketData: MarketItem[] = [
     symbol: "AFOX",
     price: 678.90,
     imageUrl: "/tokens/AFOX.svg",
-    creator: "0xfox...cold",
+    creator: creators[1],
     description: "Cool as ice, swift as lightning",
     timestamp: timestamps.hours,
     marketCap: 165000,
@@ -710,6 +772,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(50, 216 * 60 * 60 * 1000),
     holders: generateHolders(78, 22),
     trades: generateTradesWithVariedTimestamps(140, { min: 650, max: 700 }),
+    priceChange24h: 44.7,
   },
   {
     id: "39",
@@ -717,7 +780,7 @@ export const marketData: MarketItem[] = [
     symbol: "JBEAT",
     price: 1234.56,
     imageUrl: "/tokens/JBEAT.svg",
-    creator: "0xbeat...wild",
+    creator: creators[2],
     description: "Wild returns in the crypto jungle",
     timestamp: timestamps.days,
     marketCap: 245000,
@@ -727,6 +790,7 @@ export const marketData: MarketItem[] = [
     comments: generateComments(70, 240 * 60 * 60 * 1000),
     holders: generateHolders(98, 52),
     trades: generateTradesWithVariedTimestamps(180, { min: 1200, max: 1300 }),
+    priceChange24h: 46.0,
   },
   {
     id: "40",
@@ -734,7 +798,7 @@ export const marketData: MarketItem[] = [
     symbol: "STRM",
     price: 2345.67,
     imageUrl: "/tokens/STRM.svg",
-    creator: "0xstrm...rain",
+    creator: creators[3],
     description: "Lightning fast transactions in the cloud",
     timestamp: timestamps.weeks,
     marketCap: 380000,
@@ -744,6 +808,20 @@ export const marketData: MarketItem[] = [
     comments: generateComments(80, 264 * 60 * 60 * 1000),
     holders: generateHolders(115, 75),
     trades: generateTradesWithVariedTimestamps(200, { min: 2300, max: 2400 }),
+    twitter: "https://twitter.com/stormcloud",
+    discord: "https://discord.gg/stormcloud",
+    telegram: "https://t.me/stormcloud",
+    priceChange24h: 47.3,
   }
 ]; 
+
+function generatePriceChange(): number {
+  return Number((Math.random() * 30 - 15).toFixed(1));
+}
+
+marketData.forEach(token => {
+  if (!token.priceChange24h) {
+    token.priceChange24h = generatePriceChange();
+  }
+});
 

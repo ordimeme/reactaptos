@@ -7,12 +7,13 @@ import { ActivityTabs } from "./Components/ActivityTabs";
 import { SlippageDialog } from "./Components/SlippageDialog";
 import { BottomNav } from "./Components/BottomNav";
 import { ThemeContext } from "@/context/ThemeContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import { TradesView } from "./Components/TradesView";
 import { ChartView } from "./Components/ChartView";
 import { useToast } from "@/components/ui/use-toast";
+import { truncateAddress, getFullAddress } from "@/utils/truncateAddress";
 
 export default function TokenPage() {
   const { toast } = useToast();
@@ -118,18 +119,15 @@ export default function TokenPage() {
   // 添加复制函数
   const handleCopyCA = async (address: string) => {
     try {
-      // 确保复制完整地址
-      const fullAddress = address.startsWith('0x') ? address : `0x${address}`;
-      await navigator.clipboard.writeText(fullAddress);
-      
+      await navigator.clipboard.writeText(getFullAddress(address));
       toast({
-        title: "地址已复制",
+        title: "Success",
         description: "Contract address has been copied to clipboard",
       });
     } catch (err) {
       console.error('Failed to copy:', err);
       toast({
-        title: "复制失败",
+        title: "Failed",
         description: "Failed to copy address",
         variant: "destructive",
       });
@@ -142,40 +140,7 @@ export default function TokenPage() {
       case "buy/sell":
         return (
           <div className="space-y-6">
-            {/* Market Cap 和 CA 信息 */}
-            <Card className="border-muted/40 dark:border-muted/20">
-              <CardContent className="pt-6 space-y-6">
-                {/* Market Cap 和 Bonding Progress */}
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">
-                    MCap: ${token.marketCap.toLocaleString()}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Bonding: {token.bondingProgress}%
-                  </div>
-                </div>
-
-                {/* Contract Address - 使用 TokenInfo 样式 */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">ca:</span>
-                    <div className="flex items-center gap-2 bg-muted/20 rounded px-2 py-1 flex-1">
-                      <span className="text-sm font-mono truncate">{token.creator}</span>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6 hover:bg-muted"
-                        onClick={() => handleCopyCA(token.creator)}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Trade Card */}
+            {/* 直接显示 Trade Card，移除之前的 Market Cap 和 CA 信息卡片 */}
             <TradeCard 
               token={{
                 ...token,
@@ -249,7 +214,6 @@ export default function TokenPage() {
                 if (!target.src.includes('default.svg')) {
                   target.src = '/tokens/default.svg';
                 }
-                // 防止无限循环
                 target.onerror = null;
               }}
             />
@@ -258,13 +222,10 @@ export default function TokenPage() {
             <CardTitle className="text-2xl font-bold">{token.name}</CardTitle>
             <div className="flex items-center gap-2">
               <p className="text-muted-foreground">{token.symbol}</p>
-              <p className={priceChange >= 0 ? "text-green-500" : "text-red-500"}>
-                ({priceChange >= 0 ? "+" : ""}{priceChange.toFixed(2)}% 24h)
-              </p>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">ca:</span>
                 <div className="flex items-center gap-2 bg-muted/20 rounded px-2 py-1">
-                  <span className="text-sm font-mono">{token.creator}</span>
+                  <span className="text-sm font-mono">{truncateAddress(token.creator)}</span>
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -279,6 +240,9 @@ export default function TokenPage() {
           </div>
           <div className="text-right">
             <p className="text-2xl font-bold">${token.price.toFixed(2)}</p>
+            <p className={`text-sm ${priceChange >= 0 ? "text-green-500" : "text-red-500"}`}>
+              ({priceChange >= 0 ? "+" : ""}{priceChange.toFixed(2)}% 24h)
+            </p>
           </div>
         </CardHeader>
       </Card>
