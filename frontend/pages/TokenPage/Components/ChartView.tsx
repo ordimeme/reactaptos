@@ -1,7 +1,7 @@
 import { useEffect, useContext, useState, useRef, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MarketItem } from "@/types/market";
+import { MarketItem } from "@/data/marketData";
 import { ThemeContext } from "@/context/ThemeContext";
 import { getPriceData } from "@/data/priceData";
 import { createChart, UTCTimestamp } from 'lightweight-charts';

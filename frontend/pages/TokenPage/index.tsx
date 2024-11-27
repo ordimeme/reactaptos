@@ -14,6 +14,7 @@ import { TradesView } from "./Components/TradesView";
 import { ChartView } from "./Components/ChartView";
 import { useToast } from "@/components/ui/use-toast";
 import { truncateAddress, getFullAddress } from "@/utils/truncateAddress";
+import { Comments } from "./Components/Comments";
 
 export default function TokenPage() {
   const { toast } = useToast();
@@ -47,21 +48,10 @@ export default function TokenPage() {
   // 获取安全的图片URL
   const getSafeImageUrl = (symbol: string) => {
     try {
-      // 使用本地资源路径
       return `/tokens/${symbol.toLowerCase()}.svg`;
     } catch (error) {
-      // 返回本地默认图片
       return '/tokens/default.svg';
     }
-  };
-
-  // 格式化时间
-  const formatTime = (timestamp: string) => {
-    const minutes = Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000 / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return new Date(timestamp).toLocaleDateString();
   };
 
   // 处理快速选择按钮点击
@@ -147,14 +137,11 @@ export default function TokenPage() {
             {/* Comments Section */}
             <div className="mt-6">
               <h2 className="text-lg font-semibold mb-4">Comments</h2>
-              <ActivityTabs 
+              <Comments 
                 token={token}
-                activeTab="comments"
-                setActiveTab={() => {}}
                 commentContent={commentContent}
                 setCommentContent={setCommentContent}
                 handleSubmitComment={handleSubmitComment}
-                formatTime={formatTime}
               />
             </div>
           </div>
@@ -163,7 +150,6 @@ export default function TokenPage() {
         return (
           <TradesView 
             token={token}
-            formatTime={formatTime}
           />
         );
       case "info":
@@ -181,61 +167,103 @@ export default function TokenPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 pb-[140px] lg:pb-8">
-      {/* Token Info Card - 在所有视图中都显示 */}
-      <Card className="border-muted/40 dark:border-muted/20 mb-8">
-        <CardHeader className="flex flex-row items-center gap-4">
-          <div className="w-16 h-16 overflow-hidden rounded-[10px] flex items-center justify-center bg-muted/50 dark:bg-muted/20">
-            <img 
-              src={getSafeImageUrl(token.symbol)}
-              alt={token.name} 
-              className="w-full h-full"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                if (!target.src.includes('default.svg')) {
-                  target.src = '/tokens/default.svg';
-                }
-                target.onerror = null;
-              }}
-            />
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 pb-[140px] lg:pb-8">
+      {/* Token Info Card */}
+      <Card className="border-muted/40 dark:border-muted/20 mb-4 sm:mb-8">
+        <CardHeader className="flex flex-col gap-4 p-3 sm:p-6">
+          {/* 顶部区域：图标和价格 */}
+          <div className="flex items-start justify-between gap-3">
+            {/* 左侧图标和名称 */}
+            <div className="flex gap-3 items-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 overflow-hidden rounded-[10px] flex-shrink-0 flex items-center justify-center bg-muted/50 dark:bg-muted/20">
+                <img 
+                  src={getSafeImageUrl(token.symbol)}
+                  alt={token.name} 
+                  className="w-full h-full"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (!target.src.includes('default.svg')) {
+                      target.src = '/tokens/default.svg';
+                    }
+                    target.onerror = null;
+                  }}
+                />
+              </div>
+              <div className="min-w-0">
+                <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold truncate">
+                  {token.name}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">{token.symbol}</p>
+              </div>
+            </div>
+
+            {/* 右侧价格信息 */}
+            <div className="text-right flex-shrink-0">
+              <p className="text-lg sm:text-xl md:text-2xl font-bold">${token.price.toFixed(2)}</p>
+              <p className={`text-xs sm:text-sm ${priceChange >= 0 ? "text-green-500" : "text-red-500"}`}>
+                ({priceChange >= 0 ? "+" : ""}{priceChange.toFixed(2)}% 24h)
+              </p>
+            </div>
           </div>
-          <div className="flex-1">
-            <CardTitle className="text-2xl font-bold">{token.name}</CardTitle>
-            <div className="flex items-center gap-2">
-              <p className="text-muted-foreground">{token.symbol}</p>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">ca:</span>
-                <div className="flex items-center gap-2 bg-muted/20 rounded px-2 py-1">
-                  <span className="text-sm font-mono">{truncateAddress(token.creator)}</span>
+
+          {/* 底部区域：合约地址和创建者地址 */}
+          <div className="flex flex-row md:flex-col gap-2 md:gap-3">
+            {/* Contract 地址 */}
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                <span className="hidden md:inline">Contract Address:</span>
+                <span className="md:hidden">CA:</span>
+              </span>
+              <div className="flex items-center gap-0 flex-1 min-w-0">
+                <div className="flex items-center flex-1 min-w-0">
+                  <span className="text-xs font-mono truncate md:text-sm">
+                    <span className="md:hidden">{truncateAddress(token.creator)}</span>
+                    <span className="hidden md:inline">{getFullAddress(token.creator)}</span>
+                  </span>
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-6 w-6 hover:bg-muted"
+                    className="h-6 w-6 hover:bg-muted/50 shrink-0 ml-0.5"
                     onClick={() => handleCopyCA(token.creator)}
                   >
-                    <Copy className="h-4 w-4" />
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Creator 地址 - 移动端右对齐 */}
+            <div className="flex items-center gap-1.5 flex-1 min-w-0 md:justify-start justify-end">
+              <div className="flex items-center gap-0 flex-1 min-w-0 justify-end md:justify-start">
+                <div className="flex items-center min-w-0 justify-end md:justify-start">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap mr-1.5">
+                    <span className="hidden md:inline">Creator Address:</span>
+                    <span className="md:hidden">CR:</span>
+                  </span>
+                  <span className="text-xs font-mono truncate md:text-sm">
+                    <span className="md:hidden">{truncateAddress(token.creator)}</span>
+                    <span className="hidden md:inline">{getFullAddress(token.creator)}</span>
+                  </span>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6 hover:bg-muted/50 shrink-0 ml-0.5"
+                    onClick={() => handleCopyCA(token.creator)}
+                  >
+                    <Copy className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-2xl font-bold">${token.price.toFixed(2)}</p>
-            <p className={`text-sm ${priceChange >= 0 ? "text-green-500" : "text-red-500"}`}>
-              ({priceChange >= 0 ? "+" : ""}{priceChange.toFixed(2)}% 24h)
-            </p>
-          </div>
         </CardHeader>
       </Card>
 
-      {/* 桌面端布局 - 修改这里的宽度比例 */}
+      {/* 桌面端布局 */}
       <div className="hidden lg:flex lg:flex-row gap-6">
-        {/* 左侧列 - 减小宽度 */}
+        {/* 左侧列 */}
         <div className="w-[calc(100%-480px)] space-y-6">
-          {/* Price Chart Card */}
           <ChartView token={token} />
-
-          {/* Activity Tabs */}
           <ActivityTabs 
             token={token}
             activeTab={activeTab}
@@ -243,13 +271,11 @@ export default function TokenPage() {
             commentContent={commentContent}
             setCommentContent={setCommentContent}
             handleSubmitComment={handleSubmitComment}
-            formatTime={formatTime}
           />
         </div>
 
-        {/* 右侧列 - 增加宽度 */}
+        {/* 右侧列 */}
         <div className="w-[460px] space-y-6">
-          {/* Trade Card */}
           <TradeCard 
             token={{
               ...token,
@@ -265,8 +291,6 @@ export default function TokenPage() {
             handleReset={handleReset}
             setIsSlippageDialogOpen={setIsSlippageDialogOpen}
           />
-          
-          {/* Token Info */}
           <TokenInfo 
             token={{
               ...token,
@@ -276,8 +300,8 @@ export default function TokenPage() {
         </div>
       </div>
 
-      {/* 移动端布局 */}
-      <div className="lg:hidden">
+      {/* 移动端布局 - 优化间距和内边距 */}
+      <div className="lg:hidden space-y-4">
         {renderMobileContent()}
       </div>
 
@@ -294,7 +318,7 @@ export default function TokenPage() {
         setEnableFrontRunning={setEnableFrontRunning}
         priorityFee={priorityFee}
         setPriorityFee={setPriorityFee}
-        theme={theme || "" }
+        theme={theme || ""}
       />
     </div>
   );

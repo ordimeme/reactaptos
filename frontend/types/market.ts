@@ -1,7 +1,5 @@
 export interface Comment {
-  id: string;
-  user: string;
-  avatar: string;
+  address: string;
   content: string;
   timestamp: string;
 }
@@ -14,11 +12,10 @@ export interface Holder {
 }
 
 export interface Trade {
-  id: string;
   account: string;
-  type: "buy" | "sell";
-  aptAmount: number;
+  type: 'buy' | 'sell';
   tokenAmount: number;
+  aptAmount: number;
   timestamp: string;
   txHash: string;
 }
@@ -28,19 +25,20 @@ export interface MarketItem {
   name: string;
   symbol: string;
   price: number;
-  imageUrl: string;
-  creator: string;
-  description: string;
-  timestamp: string;
   marketCap: number;
-  bondingProgress: number;
-  kingProgress: number;
-  dethroneCap: number;
-  comments: Comment[];
-  holders: Holder[];
-  trades: Trade[];
+  volume24h: number;
+  liquidity?: number;
+  holders: number;
+  totalSupply: number;
+  creator: string;
+  description?: string;
   twitter?: string;
   discord?: string;
   telegram?: string;
-  priceChange24h: number;
+  bondingProgress: number;
+  kingProgress: number;
+  dethroneCap: number;
+  trades: Trade[];
+  comments: Comment[];
+  imageUrl?: string;
 } 

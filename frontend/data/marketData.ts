@@ -1,10 +1,7 @@
 export interface Comment {
-  id: string;
-  user: string;
-  avatar: string;
+  address: string;
   content: string;
   timestamp: string;
-  author: string;
 }
 
 export interface Trade {
@@ -35,6 +32,7 @@ export interface MarketItem {
   description: string;
   timestamp: string;
   marketCap: number;
+  liquidity: number;
   bondingProgress: number;
   kingProgress: number;
   dethroneCap: number;
@@ -69,12 +67,9 @@ function generateTradesWithVariedTimestamps(count: number, priceRange: { min: nu
 
 function generateComments(count: number, timeRange: number): Comment[] {
   return Array.from({ length: count }, (_, i) => ({
-    id: `comment_${i + 1}`,
-    user: `User${Math.floor(Math.random() * 1000)}`,
-    avatar: `/avatars/avatar${Math.floor(Math.random() * 10) + 1}.png`,
+    address: `0x${Math.random().toString(36).substring(2, 15)}`,
     content: `This is comment ${i + 1}. ${Math.random() > 0.5 ? '🚀 To the moon!' : '💎 Diamond hands!'}`,
-    timestamp: new Date(Date.now() - Math.random() * timeRange).toISOString(),
-    author: `User${Math.floor(Math.random() * 1000)}`
+    timestamp: new Date(Date.now() - Math.random() * timeRange).toISOString()
   })).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }
 
@@ -166,6 +161,7 @@ export const marketData: MarketItem[] = [
     description: "Woodstock is a fictional character in Charles M. Schulz's comic strip Peanuts.",
     timestamp: timestamps.seconds,
     marketCap: 6900,
+    liquidity: 690,
     bondingProgress: 15,
     kingProgress: 70,
     dethroneCap: 45382,
@@ -187,6 +183,7 @@ export const marketData: MarketItem[] = [
     description: "Much wow, very plus!",
     timestamp: timestamps.minutes,
     marketCap: 12000,
+    liquidity: 1200,
     bondingProgress: 8,
     kingProgress: 45,
     dethroneCap: 35000,
@@ -208,6 +205,7 @@ export const marketData: MarketItem[] = [
     description: "The original meme token that started it all",
     timestamp: timestamps.hours,
     marketCap: 93729,
+    liquidity: 937,
     bondingProgress: 35,
     kingProgress: 65,
     dethroneCap: 78234,
@@ -228,6 +226,7 @@ export const marketData: MarketItem[] = [
     description: "To the moon and beyond!",
     timestamp: timestamps.days,
     marketCap: 150000,
+    liquidity: 15000,
     bondingProgress: 42,
     kingProgress: 75,
     dethroneCap: 95000,
@@ -249,6 +248,7 @@ export const marketData: MarketItem[] = [
     description: "HODL forever! 💎🙌",
     timestamp: timestamps.weeks,
     marketCap: 250000,
+    liquidity: 25000,
     bondingProgress: 68,
     kingProgress: 85,
     dethroneCap: 180000,
@@ -272,6 +272,7 @@ export const marketData: MarketItem[] = [
     description: "Powering the next generation of memes",
     timestamp: timestamps.months,
     marketCap: 500000,
+    liquidity: 50000,
     bondingProgress: 92,
     kingProgress: 95,
     dethroneCap: 450000,
@@ -295,6 +296,7 @@ export const marketData: MarketItem[] = [
     description: "The purr-fect token for cat lovers!",
     timestamp: timestamps.hours,
     marketCap: 15000,
+    liquidity: 1500,
     bondingProgress: 12,
     kingProgress: 40,
     dethroneCap: 38000,
@@ -313,6 +315,7 @@ export const marketData: MarketItem[] = [
     description: "Lightning fast DeFi solutions",
     timestamp: timestamps.days,
     marketCap: 18500,
+    liquidity: 1850,
     bondingProgress: 20,
     kingProgress: 55,
     dethroneCap: 42000,
@@ -331,6 +334,7 @@ export const marketData: MarketItem[] = [
     description: "A new dawn for decentralized gaming",
     timestamp: timestamps.weeks,
     marketCap: 21000,
+    liquidity: 2100,
     bondingProgress: 18,
     kingProgress: 48,
     dethroneCap: 45000,
@@ -349,6 +353,7 @@ export const marketData: MarketItem[] = [
     description: "Seamless cross-chain liquidity",
     timestamp: timestamps.months,
     marketCap: 24000,
+    liquidity: 2400,
     bondingProgress: 22,
     kingProgress: 58,
     dethroneCap: 48000,
@@ -367,6 +372,7 @@ export const marketData: MarketItem[] = [
     description: "Burning through barriers in DeFi",
     timestamp: timestamps.minutes,
     marketCap: 27000,
+    liquidity: 2700,
     bondingProgress: 16,
     kingProgress: 52,
     dethroneCap: 51000,
@@ -385,6 +391,7 @@ export const marketData: MarketItem[] = [
     description: "Illuminating the path to decentralization",
     timestamp: timestamps.seconds,
     marketCap: 30000,
+    liquidity: 3000,
     bondingProgress: 24,
     kingProgress: 62,
     dethroneCap: 54000,
@@ -405,6 +412,7 @@ export const marketData: MarketItem[] = [
     description: "Building the future of virtual worlds",
     timestamp: timestamps.hours,
     marketCap: 120000,
+    liquidity: 12000,
     bondingProgress: 38,
     kingProgress: 72,
     dethroneCap: 85000,
@@ -426,6 +434,7 @@ export const marketData: MarketItem[] = [
     description: "NFT meets DeFi in pixel perfection",
     timestamp: timestamps.days,
     marketCap: 135000,
+    liquidity: 13500,
     bondingProgress: 45,
     kingProgress: 68,
     dethroneCap: 92000,
@@ -444,6 +453,7 @@ export const marketData: MarketItem[] = [
     description: "Future of digital rebellion",
     timestamp: timestamps.weeks,
     marketCap: 142000,
+    liquidity: 14200,
     bondingProgress: 32,
     kingProgress: 70,
     dethroneCap: 98000,
@@ -462,6 +472,7 @@ export const marketData: MarketItem[] = [
     description: "Explore the crypto universe",
     timestamp: timestamps.months,
     marketCap: 158000,
+    liquidity: 15800,
     bondingProgress: 28,
     kingProgress: 65,
     dethroneCap: 105000,
@@ -482,6 +493,7 @@ export const marketData: MarketItem[] = [
     description: "Quantum computing meets blockchain",
     timestamp: timestamps.hours,
     marketCap: 280000,
+    liquidity: 28000,
     bondingProgress: 72,
     kingProgress: 88,
     dethroneCap: 195000,
@@ -500,6 +512,7 @@ export const marketData: MarketItem[] = [
     description: "Sustainable blockchain energy",
     timestamp: timestamps.days,
     marketCap: 310000,
+    liquidity: 31000,
     bondingProgress: 65,
     kingProgress: 82,
     dethroneCap: 220000,
@@ -518,6 +531,7 @@ export const marketData: MarketItem[] = [
     description: "AI-powered DeFi solutions",
     timestamp: timestamps.weeks,
     marketCap: 340000,
+    liquidity: 34000,
     bondingProgress: 58,
     kingProgress: 78,
     dethroneCap: 245000,
@@ -538,6 +552,7 @@ export const marketData: MarketItem[] = [
     description: "Interstellar blockchain technology",
     timestamp: timestamps.days,
     marketCap: 580000,
+    liquidity: 58000,
     bondingProgress: 88,
     kingProgress: 92,
     dethroneCap: 520000,
@@ -559,6 +574,7 @@ export const marketData: MarketItem[] = [
     description: "The ultimate token sink",
     timestamp: timestamps.weeks,
     marketCap: 650000,
+    liquidity: 65000,
     bondingProgress: 95,
     kingProgress: 98,
     dethroneCap: 580000,
@@ -577,6 +593,7 @@ export const marketData: MarketItem[] = [
     description: "Time-based yield optimization",
     timestamp: timestamps.months,
     marketCap: 720000,
+    liquidity: 72000,
     bondingProgress: 85,
     kingProgress: 90,
     dethroneCap: 650000,
@@ -595,6 +612,7 @@ export const marketData: MarketItem[] = [
     description: "Pushing the boundaries of DeFi",
     timestamp: timestamps.years,
     marketCap: 790000,
+    liquidity: 79000,
     bondingProgress: 82,
     kingProgress: 88,
     dethroneCap: 720000,
@@ -613,6 +631,7 @@ export const marketData: MarketItem[] = [
     description: "The beginning of a new era",
     timestamp: timestamps.seconds,
     marketCap: 850000,
+    liquidity: 85000,
     bondingProgress: 78,
     kingProgress: 85,
     dethroneCap: 780000,
@@ -633,6 +652,7 @@ export const marketData: MarketItem[] = [
     description: "The first dog in crypto space!",
     timestamp: timestamps.minutes,
     marketCap: 280000,
+    liquidity: 28000,
     bondingProgress: 45,
     kingProgress: 75,
     dethroneCap: 320000,
@@ -653,6 +673,7 @@ export const marketData: MarketItem[] = [
     description: "Digital dragons unleashed",
     timestamp: timestamps.hours,
     marketCap: 420000,
+    liquidity: 42000,
     bondingProgress: 68,
     kingProgress: 82,
     dethroneCap: 480000,
@@ -671,6 +692,7 @@ export const marketData: MarketItem[] = [
     description: "Your gateway to magical returns",
     timestamp: timestamps.days,
     marketCap: 180000,
+    liquidity: 18000,
     bondingProgress: 32,
     kingProgress: 58,
     dethroneCap: 220000,
@@ -689,6 +711,7 @@ export const marketData: MarketItem[] = [
     description: "Rising from the ashes of old finance",
     timestamp: timestamps.weeks,
     marketCap: 680000,
+    liquidity: 68000,
     bondingProgress: 88,
     kingProgress: 92,
     dethroneCap: 720000,
@@ -710,6 +733,7 @@ export const marketData: MarketItem[] = [
     description: "Pure crystallized blockchain technology",
     timestamp: timestamps.months,
     marketCap: 145000,
+    liquidity: 14500,
     bondingProgress: 15,
     kingProgress: 45,
     dethroneCap: 180000,
@@ -728,6 +752,7 @@ export const marketData: MarketItem[] = [
     description: "Riding the waves of DeFi innovation",
     timestamp: timestamps.seconds,
     marketCap: 195000,
+    liquidity: 19500,
     bondingProgress: 28,
     kingProgress: 52,
     dethroneCap: 240000,
@@ -746,6 +771,7 @@ export const marketData: MarketItem[] = [
     description: "Digital gold from the crypto desert",
     timestamp: timestamps.minutes,
     marketCap: 820000,
+    liquidity: 82000,
     bondingProgress: 92,
     kingProgress: 96,
     dethroneCap: 880000,
@@ -766,6 +792,7 @@ export const marketData: MarketItem[] = [
     description: "Cool as ice, swift as lightning",
     timestamp: timestamps.hours,
     marketCap: 165000,
+    liquidity: 16500,
     bondingProgress: 22,
     kingProgress: 48,
     dethroneCap: 200000,
@@ -784,6 +811,7 @@ export const marketData: MarketItem[] = [
     description: "Wild returns in the crypto jungle",
     timestamp: timestamps.days,
     marketCap: 245000,
+    liquidity: 24500,
     bondingProgress: 52,
     kingProgress: 72,
     dethroneCap: 280000,
@@ -802,6 +830,7 @@ export const marketData: MarketItem[] = [
     description: "Lightning fast transactions in the cloud",
     timestamp: timestamps.weeks,
     marketCap: 380000,
+    liquidity: 38000,
     bondingProgress: 75,
     kingProgress: 85,
     dethroneCap: 420000,
