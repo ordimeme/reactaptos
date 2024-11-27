@@ -46,8 +46,13 @@ export default function TokenPage() {
 
   // 获取安全的图片URL
   const getSafeImageUrl = (symbol: string) => {
-    const safeName = symbol.toLowerCase().replace(/[^a-z0-9]/g, '');
-    return `/tokens/${safeName}.svg`;
+    try {
+      // 使用本地资源路径
+      return `/tokens/${symbol.toLowerCase()}.svg`;
+    } catch (error) {
+      // 返回本地默认图片
+      return '/tokens/default.svg';
+    }
   };
 
   // 格式化时间
@@ -99,7 +104,7 @@ export default function TokenPage() {
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     
-    // 找到24小��前最近的交易
+    // 找到24小前最近的交易
     const oldTrade = trades.find(trade => new Date(trade.timestamp) < oneDayAgo);
     const latestTrade = trades[0];
 
@@ -222,7 +227,11 @@ export default function TokenPage() {
               className="w-full h-full"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                target.src = getSafeImageUrl(token.symbol);
+                if (!target.src.includes('default.svg')) {
+                  target.src = '/tokens/default.svg';
+                }
+                // 防止无限循环
+                target.onerror = null;
               }}
             />
           </div>

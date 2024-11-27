@@ -44,7 +44,7 @@ const ThemeToggle = () => {
 
   return (
     <button 
-      className="p-2 rounded-full transition-colors duration-300 ease-in-out hover:bg-[var(--primary)]"
+      className="p-2 rounded-full hover:bg-[var(--primary)]"
       style={{ color: 'var(--textColor)' }}
       onClick={toggle}
     >
