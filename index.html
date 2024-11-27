@@ -14,13 +14,26 @@
     <script type="text/javascript">
       var TradingView = window.TradingView || {};
     </script>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.deinvest.com https://*.tradingview.com https://*.aptoslabs.com https://www.googletagmanager.com https://*.irys.xyz; img-src 'self' data: blob: https://*.deinvest.com https://*.tradingview.com https://fonts.gstatic.com https://*.irys.xyz https://gateway.irys.xyz; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.deinvest.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.tradingview.com https://www.googletagmanager.com https://*.deinvest.com https://*.irys.xyz; connect-src 'self' https://*.tradingview.com https://*.aptoslabs.com https://www.google-analytics.com https://*.deinvest.com https://*.irys.xyz https://gateway.irys.xyz ws: wss:; frame-src 'self' https://*.tradingview.com https://*.deinvest.com https://*.irys.xyz;">
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      img-src 'self' data: blob: https://*.deinvest.com https://*.tradingview.com https://fonts.gstatic.com https://*.irys.xyz https://gateway.irys.xyz;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.deinvest.com https://*.tradingview.com;
+      font-src 'self' data: https://fonts.gstatic.com;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.tradingview.com https://www.googletagmanager.com https://*.deinvest.com https://*.irys.xyz https://vercel.live 'nonce-tradingview';
+      connect-src 'self' https://*.tradingview.com https://*.aptoslabs.com https://www.google-analytics.com https://*.deinvest.com https://*.irys.xyz https://gateway.irys.xyz https://vercel.live ws: wss:;
+      frame-src 'self' https://*.tradingview.com https://*.deinvest.com https://*.irys.xyz https://vercel.live;
+      worker-src 'self' blob: 'unsafe-eval';
+      form-action 'self';
+      base-uri 'self';
+      object-src 'none';
+      frame-ancestors 'self';
+      upgrade-insecure-requests;
+    ">
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/frontend/main.tsx"></script>
-    <script>
-      // 防止钱包扩展修改 window.ethereum 属性导致的错误
+    <script nonce="tradingview">
       if (typeof window.ethereum === 'undefined') {
         Object.defineProperty(window, 'ethereum', {
           value: null,

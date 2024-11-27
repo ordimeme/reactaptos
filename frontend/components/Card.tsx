@@ -63,10 +63,10 @@ const Card = ({ item }: CardProps) => {
   };
 
   return (
-    <div className="bg-card hover:bg-accent/5 border border-border rounded-xl p-4 transition-all duration-300 hover:shadow-lg cursor-pointer">
+    <div className="group bg-card hover:bg-accent/5 border border-border rounded-xl p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
       {/* Token基本信息 */}
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 overflow-hidden rounded-xl flex items-center justify-center bg-muted">
+        <div className="w-12 h-12 overflow-hidden rounded-xl flex items-center justify-center bg-muted group-hover:bg-background/80 transition-colors duration-300">
           <img 
             src={getSafeImageUrl(item.symbol)}
             alt={item.name}
@@ -76,7 +76,7 @@ const Card = ({ item }: CardProps) => {
           />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-base">{item.name}</h3>
+          <h3 className="font-semibold text-base group-hover:text-primary transition-colors duration-300">{item.name}</h3>
           <p className="text-sm text-muted-foreground">{item.symbol}</p>
         </div>
         <div className="text-right">
@@ -90,7 +90,7 @@ const Card = ({ item }: CardProps) => {
       {/* CA 和时间信息 */}
       <div className="mt-4 flex items-center gap-2">
         <span className="text-sm text-muted-foreground whitespace-nowrap">CA:</span>
-        <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-1.5 w-[180px]">
+        <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-1.5 w-[180px] group-hover:bg-background/80 transition-colors duration-300">
           <span className="text-sm font-mono text-foreground/80">{truncateAddress(item.creator)}</span>
           <Button 
             variant="ghost" 
