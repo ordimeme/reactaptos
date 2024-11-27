@@ -16,8 +16,8 @@ export const getPriceData = (symbol: string, currentPrice: number) => {
   const random = seededRandom(symbol);
   const candleData = [];
   let price = currentPrice;
-  const now = Math.floor(Date.now() / 1000) * 1000;
-  const timeStep = 60 * 60 * 1000; // 1小时
+  const now = Math.floor(Date.now() / 1000);
+  const timeStep = 60 * 60; // 1小时的秒数
   const volatility = 0.02; // 2% 波动率
 
   // 生成过去200个小时的数据
@@ -32,16 +32,14 @@ export const getPriceData = (symbol: string, currentPrice: number) => {
     const volume = random() * 1000 * Math.abs(change) * 50;
 
     candleData.push({
-      time: time,
-      open: Number(open.toFixed(2)),
-      high: Number(high.toFixed(2)),
-      low: Number(low.toFixed(2)),
-      close: Number(close.toFixed(2)),
+      time: time, // 注意这里改为秒级时间戳
+      open: Number(open.toFixed(4)),
+      high: Number(high.toFixed(4)),
+      low: Number(low.toFixed(4)),
+      close: Number(close.toFixed(4)),
       volume: Number(volume.toFixed(2))
     });
   }
 
-  return {
-    candleData
-  };
+  return candleData;
 }; 

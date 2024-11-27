@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import CardList from "@/components/CardList"
 import { marketData } from "@/data/marketData"
 import { Card as UICard, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,17 +20,38 @@ const Markets = () => {
   const [sortBy, setSortBy] = useState<string>("creation-time")
   const [searchTerm, setSearchTerm] = useState("")
   const [filterBy, setFilterBy] = useState<string>("all")
+  const [imageCache, setImageCache] = useState<{ [key: string]: boolean }>({});
 
-  // 获取 Top Gainer 和 Top Volume 数据
-  const getTopGainer = () => {
-    return [...marketData].sort((a, b) => b.price - a.price)[0]
-  }
+  // 预加载所有图片
+  useEffect(() => {
+    const preloadImages = async () => {
+      const newImageCache = { ...imageCache };
+      
+      for (const item of marketData) {
+        const safeName = item.symbol.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const imageUrl = `/tokens/${safeName}.svg`;
+        
+        try {
+          const img = new Image();
+          img.src = imageUrl;
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+          });
+          newImageCache[item.symbol] = true;
+        } catch (error) {
+          console.warn(`Failed to load image for ${item.symbol}`);
+          newImageCache[item.symbol] = false;
+        }
+      }
+      
+      setImageCache(newImageCache);
+    };
 
-  const getTopVolume = () => {
-    return [...marketData].sort((a, b) => b.price - a.price)[1]
-  }
+    preloadImages();
+  }, []);
 
-  // 获取安全的图片URL
+  // 获取安全的图片URL并处理加载状态
   const getSafeImageUrl = (symbol: string) => {
     const safeName = symbol.toLowerCase().replace(/[^a-z0-9]/g, '');
     return `/tokens/${safeName}.svg`;
@@ -51,16 +72,19 @@ const Markets = () => {
         <CardContent>
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 overflow-hidden rounded-[10px] flex items-center justify-center bg-muted/50 dark:bg-muted/20">
-              <img 
-                src={getSafeImageUrl(item.symbol)}
-                alt={item.name}
-                className="w-full h-full transition-transform duration-300 group-hover:scale-110"
-                loading="lazy"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = getSafeImageUrl(item.symbol);
-                }}
-              />
+              {imageCache[item.symbol] !== false && (
+                <img 
+                  src={getSafeImageUrl(item.symbol)}
+                  alt={item.name}
+                  className="w-full h-full transition-transform duration-300 group-hover:scale-110"
+                  loading="lazy"
+                  onError={() => {
+                    const newCache = { ...imageCache };
+                    newCache[item.symbol] = false;
+                    setImageCache(newCache);
+                  }}
+                />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-base md:text-sm truncate">{item.name}</h3>
@@ -74,7 +98,16 @@ const Markets = () => {
         </CardContent>
       </UICard>
     </Link>
-  )
+  );
+
+  // 获取 Top Gainer 和 Top Volume 数据
+  const getTopGainer = () => {
+    return [...marketData].sort((a, b) => b.price - a.price)[0]
+  }
+
+  const getTopVolume = () => {
+    return [...marketData].sort((a, b) => b.price - a.price)[1]
+  }
 
   // 筛选和排序逻辑
   const getFilteredData = () => {
@@ -159,7 +192,7 @@ const Markets = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* 使用活动滚动条组件 */}
+      {/* 使用活动滚动���组件 */}
       <div className="mb-8">
         <ActivityScroll 
           speed={30}
