@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button"
 import { MarketItem } from "@/data/marketData"
-import { truncateAddress, getFullAddress } from "@/utils/truncateAddress"
+import { truncateAddress, getFullAddress, formatTxHash } from "@/utils/truncateAddress"
 import { Copy } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { useEffect, useState } from "react"
 
 interface TradesViewProps {
   token: MarketItem;
@@ -18,6 +19,16 @@ export function TradesView({
   formatTime
 }: TradesViewProps) {
   const { toast } = useToast();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleCopyAddress = async (address: string) => {
     try {
@@ -40,13 +51,13 @@ export function TradesView({
     <div className="space-y-4">
       <div className="rounded-lg border border-muted/40 dark:border-muted/20 overflow-hidden">
         {/* 表头 */}
-        <div className="grid grid-cols-6 gap-2 p-3 text-sm text-muted-foreground bg-muted/5">
-          <div>Account</div>
-          <div>Type</div>
-          <div className="text-right">Amount ({token.symbol})</div>
-          <div className="text-right">Amount (APT)</div>
-          <div className="text-right">Time</div>
-          <div className="text-right">Transaction</div>
+        <div className="grid grid-cols-6 gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm text-muted-foreground bg-muted/5">
+          <div className="col-span-1">Account</div>
+          <div className="col-span-1">Type</div>
+          <div className="col-span-1 text-right">Amount ({token.symbol})</div>
+          <div className="col-span-1 text-right">Amount (APT)</div>
+          <div className="col-span-1 text-right">Time</div>
+          <div className="col-span-1 text-right">{isMobile ? 'Txs' : 'Transaction'}</div>
         </div>
         
         {/* 交易列表 */}
@@ -54,24 +65,26 @@ export function TradesView({
           {token.trades.slice(0, visibleTrades).map((trade, index) => (
             <div 
               key={index} 
-              className="grid grid-cols-6 gap-2 p-3 text-sm hover:bg-muted/5 transition-colors"
+              className="grid grid-cols-6 gap-1 md:gap-2 p-2 md:p-3 text-xs md:text-sm hover:bg-muted/5 transition-colors"
             >
               {/* 账户地址 */}
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs">{truncateAddress(trade.account)}</span>
+              <div className="col-span-1 flex items-center gap-0.5 md:gap-1">
+                <span className="font-mono truncate">
+                  {truncateAddress(trade.account)}
+                </span>
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-5 w-5 hover:bg-muted"
+                  className="h-4 w-4 md:h-5 md:w-5 hover:bg-muted"
                   onClick={() => handleCopyAddress(trade.account)}
                 >
-                  <Copy className="h-3 w-3" />
+                  <Copy className="h-2.5 w-2.5 md:h-3 md:w-3" />
                 </Button>
               </div>
               
               {/* 交易类型 */}
-              <div>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+              <div className="col-span-1">
+                <span className={`px-1.5 md:px-2 py-0.5 rounded-full text-[10px] md:text-xs font-medium ${
                   trade.type === 'buy' 
                     ? 'bg-green-500/20 text-green-500' 
                     : 'bg-red-500/20 text-red-500'
@@ -81,30 +94,30 @@ export function TradesView({
               </div>
               
               {/* 代币数量 */}
-              <div className="text-right font-mono">
+              <div className="col-span-1 text-right font-mono">
                 {trade.tokenAmount.toFixed(3)}
               </div>
 
               {/* APT 金额 */}
-              <div className="text-right font-mono">
+              <div className="col-span-1 text-right font-mono">
                 {trade.aptAmount.toFixed(3)}
               </div>
               
               {/* 时间 */}
-              <div className="text-right text-muted-foreground text-xs">
+              <div className="col-span-1 text-right text-muted-foreground">
                 {formatTime(trade.timestamp)}
               </div>
 
               {/* 交易哈希 */}
-              <div className="text-right">
+              <div className="col-span-1 text-right">
                 <a 
                   href={`https://explorer.aptoslabs.com/txn/${trade.txHash}?network=mainnet`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-mono text-xs text-blue-500 hover:text-blue-600 truncate inline-block max-w-[100px]"
+                  className="font-mono text-blue-500 hover:text-blue-600 truncate inline-block max-w-[60px] md:max-w-[100px]"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {trade.txHash.slice(0, 6)}...{trade.txHash.slice(-4)}
+                  {formatTxHash(trade.txHash, isMobile)}
                 </a>
               </div>
             </div>
