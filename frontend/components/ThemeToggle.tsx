@@ -42,13 +42,29 @@ const MoonIcon = () => (
 const ThemeToggle = () => {
   const { theme, toggle } = useContext(ThemeContext)
 
+  const handleClick = () => {
+    // 添加点击反馈
+    const button = document.activeElement as HTMLButtonElement;
+    if (button) {
+      button.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        button.style.transform = '';
+      }, 100);
+    }
+    toggle();
+  };
+
   return (
     <button 
-      className="p-2 rounded-full hover:bg-[var(--primary)]"
-      style={{ color: 'var(--textColor)' }}
-      onClick={toggle}
+      className="p-2 rounded-full hover:bg-[var(--primary)] transform"
+      style={{ 
+        color: 'var(--foreground)',
+        backgroundColor: 'transparent',
+        transition: 'transform 0.1s ease'
+      }}
+      onClick={handleClick}
     >
-      {theme === 'dark' ? <MoonIcon /> : <SunIcon /> }
+      {theme === 'dark' ? <MoonIcon /> : <SunIcon />}
     </button>
   )
 }

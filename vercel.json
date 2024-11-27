@@ -5,9 +5,29 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self' https://*.deinvest.com https://*.tradingview.com https://*.aptoslabs.com https://www.googletagmanager.com; img-src 'self' data: https://*.deinvest.com https://*.tradingview.com https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.deinvest.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.tradingview.com https://www.googletagmanager.com https://*.deinvest.com; connect-src 'self' https://*.tradingview.com https://*.aptoslabs.com https://www.google-analytics.com https://*.deinvest.com;"
+          "value": "default-src 'self' https://*.deinvest.com https://*.tradingview.com https://*.aptoslabs.com https://www.googletagmanager.com https://*.irys.xyz; img-src 'self' data: blob: https://*.deinvest.com https://*.tradingview.com https://fonts.gstatic.com https://*.irys.xyz https://gateway.irys.xyz https://*.discord.com https://*.twitter.com https://*.telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.deinvest.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.tradingview.com https://www.googletagmanager.com https://*.deinvest.com https://*.irys.xyz; connect-src 'self' https://*.tradingview.com https://*.aptoslabs.com https://www.google-analytics.com https://*.deinvest.com https://*.irys.xyz https://gateway.irys.xyz ws: wss:; frame-src 'self' https://*.tradingview.com https://*.deinvest.com https://*.irys.xyz;"
+        }
+      ]
+    },
+    {
+      "source": "/tokens/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
         }
       ]
     }
-  ]
+  ],
+  "rewrites": [
+    {
+      "source": "/tokens/:path*",
+      "destination": "/tokens/:path*"
+    }
+  ],
+  "images": {
+    "domains": ["*.deinvest.com"],
+    "formats": ["image/avif", "image/webp", "image/svg+xml"],
+    "minimumCacheTTL": 60
+  }
 } 

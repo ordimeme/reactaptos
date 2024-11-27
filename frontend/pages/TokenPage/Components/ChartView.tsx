@@ -178,6 +178,22 @@ export function ChartView({ token }: ChartViewProps) {
     setInterval(newInterval);
   }, []);
 
+  // 监听主题变化并更新图表
+  useEffect(() => {
+    if (chartRef.current) {
+      chartRef.current.applyOptions({
+        layout: {
+          background: { color: theme === 'dark' ? '#1a1b1e' : '#ffffff' },
+          textColor: theme === 'dark' ? '#d1d4dc' : '#000000',
+        },
+        grid: {
+          vertLines: { color: theme === 'dark' ? '#2B2B43' : '#e1e3eb' },
+          horzLines: { color: theme === 'dark' ? '#2B2B43' : '#e1e3eb' },
+        },
+      });
+    }
+  }, [theme]);
+
   return (
     <Card className="border-muted/40 dark:border-muted/20 w-full">
       <CardHeader className="pb-2">

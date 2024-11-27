@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/toaster.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { WalletProvider } from "@/components/WalletProvider.tsx";
 import { WrongNetworkAlert } from "@/components/WrongNetworkAlert";
-import { ThemeContextProvider } from"@/context/ThemeContext.tsx"
+import { ThemeContextProvider } from './context/ThemeContext';
 import { TokenDataContextProvider } from "@/providers/tokenData";
 import { PoolDataContextProvider } from "@/providers/poolData";
 import { AccountDataContextProvider } from "@/providers/accountData";

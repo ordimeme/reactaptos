@@ -12,9 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import { TradesView } from "./Components/TradesView";
 import { ChartView } from "./Components/ChartView";
-import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function TokenPage() {
+  const { toast } = useToast();
   const { theme } = useContext(ThemeContext);
   const { id } = useParams();
   
@@ -97,24 +98,42 @@ export default function TokenPage() {
   };
 
   // 计算24小时涨跌幅
-  const getPriceChange = () => {
+  const priceChange = (() => {
     const trades = token.trades;
     if (trades.length < 2) return 0;
 
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     
-    // 找到24小前最近的交易
     const oldTrade = trades.find(trade => new Date(trade.timestamp) < oneDayAgo);
     const latestTrade = trades[0];
 
     if (!oldTrade) return 0;
 
-    const priceChange = ((latestTrade.aptAmount / latestTrade.tokenAmount) - 
-                        (oldTrade.aptAmount / oldTrade.tokenAmount)) / 
-                        (oldTrade.aptAmount / oldTrade.tokenAmount) * 100;
+    return ((latestTrade.aptAmount / latestTrade.tokenAmount) - 
+            (oldTrade.aptAmount / oldTrade.tokenAmount)) / 
+            (oldTrade.aptAmount / oldTrade.tokenAmount) * 100;
+  })();
 
-    return priceChange;
+  // 添加复制函数
+  const handleCopyCA = async (address: string) => {
+    try {
+      // 确保复制完整地址
+      const fullAddress = address.startsWith('0x') ? address : `0x${address}`;
+      await navigator.clipboard.writeText(fullAddress);
+      
+      toast({
+        title: "地址已复制",
+        description: "Contract address has been copied to clipboard",
+      });
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      toast({
+        title: "复制失败",
+        description: "Failed to copy address",
+        variant: "destructive",
+      });
+    }
   };
 
   // 渲染移动端内容
@@ -146,7 +165,7 @@ export default function TokenPage() {
                         variant="ghost" 
                         size="icon" 
                         className="h-6 w-6 hover:bg-muted"
-                        onClick={() => navigator.clipboard.writeText(token.creator)}
+                        onClick={() => handleCopyCA(token.creator)}
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
@@ -239,12 +258,23 @@ export default function TokenPage() {
             <CardTitle className="text-2xl font-bold">{token.name}</CardTitle>
             <div className="flex items-center gap-2">
               <p className="text-muted-foreground">{token.symbol}</p>
-              <p className={cn(
-                "text-sm font-medium",
-                getPriceChange() >= 0 ? "text-green-500" : "text-red-500"
-              )}>
-                ({getPriceChange() >= 0 ? "+" : ""}{getPriceChange().toFixed(2)}% 24h)
+              <p className={priceChange >= 0 ? "text-green-500" : "text-red-500"}>
+                ({priceChange >= 0 ? "+" : ""}{priceChange.toFixed(2)}% 24h)
               </p>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">ca:</span>
+                <div className="flex items-center gap-2 bg-muted/20 rounded px-2 py-1">
+                  <span className="text-sm font-mono">{token.creator}</span>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6 hover:bg-muted"
+                    onClick={() => handleCopyCA(token.creator)}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
           <div className="text-right">

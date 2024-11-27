@@ -2,8 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+:root[theme="light"] {
+  color-scheme: light;
+}
+
+:root[theme="dark"] {
+  color-scheme: dark;
+}
+
 @layer base {
-  :root {
+  :root,
+  [theme="light"] {
     --background: 0 0% 100%;
     --softBg: #E8EDF3;
     --foreground: 240 10% 3.9%;
@@ -37,7 +46,7 @@
     --radius: 0.5rem;
   }
 
-  [theme="dark"]{
+  [theme="dark"] {
     --background: 240 10% 3.9%;
     --softBg: #121219;
     --foreground: 0 0% 98%;
@@ -67,14 +76,35 @@
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
+
+  html,
+  body,
+  #root {
+    min-height: 100vh;
+    transition: var(--theme-transition);
+  }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* 确保背景色始终正确 */
+  body[theme="light"] {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  body[theme="dark"] {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  .tradingview-chart-container {
+    transition: background-color 0.1s ease;
   }
 }
 
@@ -184,4 +214,209 @@
   .tradingview-chart-container {
     height: 600px !important;
   }
+}
+
+/* 自定义滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* 确保背景色始终正确 */
+html, body {
+  min-height: 100vh;
+  background-color: var(--background);
+  color: var(--foreground);
+  scrollbar-gutter: stable;
+}
+
+/* 防止背景闪烁 */
+#root {
+  min-height: 100vh;
+  background-color: var(--background);
+}
+
+/* 优化图片加载 */
+img {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+}
+
+/* 优化移动端滚动 */
+@media (max-width: 640px) {
+  html {
+    overflow-x: hidden;
+  }
+  
+  body {
+    position: relative;
+    overflow-x: hidden;
+  }
+}
+
+/* 在 :root 选择器中添加 */
+:root {
+  --theme-transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* 修改过渡相关的样式 */
+html,
+body,
+#root {
+  min-height: 100vh;
+  transition: var(--theme-transition);
+}
+
+/* 优化其他元素的过渡效果 */
+*,
+::before,
+::after {
+  transition: var(--theme-transition);
+}
+
+/* 对于不需要过渡效果的元素 */
+.no-transition {
+  transition: none !important;
+}
+
+/* 优化图表容器的过渡 */
+.tradingview-chart-container {
+  transition: background-color 0.1s ease;
+}
+
+/* Token 图片容器样式 */
+.token-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background-color: var(--muted);
+}
+
+/* Token 图片加载状态 */
+.token-image-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--muted);
+  opacity: 0.5;
+}
+
+.token-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.2s ease;
+}
+
+.token-image-container img[src] {
+  opacity: 1;
+}
+
+.token-image-container img:not([src]) {
+  opacity: 0;
+}
+
+/* Mint 页面图片容器样式 */
+.hero-container .relative {
+  position: relative;
+  isolation: isolate;
+}
+
+.hero-container img {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  will-change: opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.hero-container img.loaded,
+.hero-container img[src*="default.svg"] {
+  opacity: 1;
+}
+
+/* 图片容器背景 */
+.hero-container .bg-muted\/20 {
+  background-color: var(--muted);
+  opacity: 0.2;
+}
+
+/* 图片加载动画 */
+@keyframes imageLoad {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.hero-container img.loaded {
+  animation: imageLoad 0.3s ease forwards;
+}
+
+/* 图片加载占位符 */
+.hero-container .image-placeholder {
+  position: absolute;
+  inset: 0;
+  background-color: var(--muted);
+  opacity: 0.5;
+}
+
+/* 图片容器响应式样式 */
+@media (max-width: 768px) {
+  .hero-container .image-container {
+    aspect-ratio: 1;
+  }
+}
+
+/* Social 图标样式 */
+.social-icon {
+  transition: transform 0.2s ease;
+}
+
+.social-icon:hover {
+  transform: scale(1.1);
+}
+
+/* 暗色模式适配 */
+.dark .social-icon {
+  filter: invert(1);
+}
+
+/* 图标加载动画 */
+@keyframes iconFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.social-icon {
+  animation: iconFadeIn 0.3s ease forwards;
 }

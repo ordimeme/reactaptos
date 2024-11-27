@@ -16,17 +16,19 @@ import { aptosClient } from "@/utils/aptosClient";
 // Internal constants
 import { NETWORK } from "@/constants";
 // Internal assets
-import Placeholder1 from "@/assets/placeholders/asset.png";
 import ExternalLink from "@/assets/icons/external-link.svg";
 import Copy from "@/assets/icons/copy.svg";
 // Internal config
 import { config } from "@/config";
-// Internal enrty functions
+// Internal entry functions
 import { mintAsset } from "@/entry-functions/mint_asset";
 
-interface HeroSectionProps {}
+interface HeroSectionProps {
+  handleImageError: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
+  getSafeImageUrl: (symbol: string) => string;
+}
 
-export const HeroSection: React.FC<HeroSectionProps> = () => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ handleImageError, getSafeImageUrl }) => {
   const { data } = useGetAssetData();
   const queryClient = useQueryClient();
   const { account, signAndSubmitTransaction } = useWallet();
@@ -70,10 +72,23 @@ export const HeroSection: React.FC<HeroSectionProps> = () => {
 
   return (
     <section className="hero-container flex flex-col md:flex-row gap-6 px-4 max-w-screen-xl mx-auto w-full">
-      <Image
-        src={asset?.icon_uri ?? Placeholder1}
-        className=" bg-gray-400 basis-1/5 aspect-square object-cover self-center max-w-[300px]"
-      />
+      <div className="w-full md:w-1/3 aspect-square md:aspect-auto bg-muted/20 rounded-lg overflow-hidden">
+        <div className="relative w-full h-full min-h-[300px] flex items-center justify-center">
+          <div className="absolute inset-0 bg-muted/20" />
+          <img
+            src={asset?.symbol ? getSafeImageUrl(asset.symbol) : '/tokens/default.svg'}
+            alt={asset?.name ?? config.defaultAsset?.name}
+            className="relative z-10 w-full h-full object-contain p-4 transition-opacity duration-300"
+            onError={handleImageError}
+            loading="lazy"
+            style={{ opacity: 0 }}
+            onLoad={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.opacity = '1';
+            }}
+          />
+        </div>
+      </div>
       <div className="basis-4/5 flex flex-col gap-4">
         <h1 className="title-md">{asset?.name ?? config.defaultAsset?.name}</h1>
         <Socials />

@@ -1,68 +1,67 @@
 "use client";
 
-import { createContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useState, useEffect, useCallback } from 'react';
 
-// 定义主题类型
-type Theme = 'light' | 'dark' | null;
-
-// 定义上下文类型
-interface ThemeContextType {
-  theme: Theme;
-  toggle: () => void;
-}
-
-// 创建上下文时提供初始值
-export const ThemeContext = createContext<ThemeContextType>({
-  theme: null,
+export const ThemeContext = createContext({
+  theme: 'light',
   toggle: () => {},
 });
 
-// 定义 Provider 的 props 类型
-interface ThemeContextProviderProps {
-  children: ReactNode;
-}
+export function ThemeContextProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') || 'light';
+    }
+    return 'light';
+  });
 
-export const ThemeContextProvider = ({ children }: ThemeContextProviderProps) => {
-  const [theme, setTheme] = useState<Theme>(null);
-
-  useEffect(() => {
-    const initTheme = () => {
-      // 先尝试从 localStorage 获取
-      const savedTheme = localStorage.getItem('theme') as Theme;
-      if (savedTheme) {
-        setTheme(savedTheme);
-        document.documentElement.setAttribute('theme', savedTheme);
-        return;
-      }
-
-      // 如果没有保存的主题，则使用系统偏好
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const initialTheme = prefersDark ? 'dark' : 'light';
-      setTheme(initialTheme);
-      document.documentElement.setAttribute('theme', initialTheme);
-      localStorage.setItem('theme', initialTheme);
-    };
-
-    initTheme();
+  // 优化主题应用函数
+  const applyTheme = useCallback((newTheme: string) => {
+    // 立即应用关键样式变化
+    document.documentElement.setAttribute('theme', newTheme);
+    document.documentElement.className = newTheme;
+    document.body.setAttribute('theme', newTheme);
+    
+    // 使用 RAF 批量处理样式更新
+    requestAnimationFrame(() => {
+      const root = document.documentElement;
+      root.style.setProperty('--theme-transition', 'none');
+      
+      // 应用背景色
+      const bgColor = getComputedStyle(root).getPropertyValue('--background').trim();
+      document.body.style.backgroundColor = `hsl(${bgColor})`;
+      
+      // 触发重排以应用变化
+      void document.documentElement.offsetHeight;
+      
+      // 恢复过渡效果
+      root.style.removeProperty('--theme-transition');
+    });
+    
+    // 保存到 localStorage
+    localStorage.setItem('theme', newTheme);
   }, []);
 
-  const toggle = () => {
-    setTheme((prev) => {
-      const newTheme = prev === "light" ? "dark" : "light";
-      document.documentElement.setAttribute('theme', newTheme);
-      localStorage.setItem('theme', newTheme);
+  // 优化切换函数
+  const toggle = useCallback(() => {
+    setTheme(prevTheme => {
+      const newTheme = prevTheme === 'light' ? 'dark' : 'light';
+      // 立即应用主题
+      applyTheme(newTheme);
       return newTheme;
     });
-  };
+  }, [applyTheme]);
 
-  // 等待主题初始化完成
-  if (theme === null) {
-    return null;
-  }
+  // 初始化主题
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme, applyTheme]);
 
   return (
     <ThemeContext.Provider value={{ theme, toggle }}>
       {children}
     </ThemeContext.Provider>
   );
-};
+}
+
+export { ThemeContextProvider as ThemeProvider };
