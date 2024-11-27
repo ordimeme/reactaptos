@@ -197,7 +197,7 @@ export function ChartView({ token }: ChartViewProps) {
     <Card className="border-muted/40 dark:border-muted/20 w-full">
       <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <CardTitle className="text-base">Trading</CardTitle>
+          <CardTitle className="text-base"> { token.symbol } MARKET</CardTitle>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
             <div className="grid grid-cols-3 sm:flex gap-1 w-full sm:w-auto">
               {intervals.map((item: IntervalOption) => (
@@ -221,7 +221,7 @@ export function ChartView({ token }: ChartViewProps) {
       <CardContent className="p-0 sm:p-6">
         {isLoading && (
           <div className="flex items-center justify-center h-[300px] sm:h-[600px]">
-            <div className="animate-pulse-subtle">加载中...</div>
+            <div className="animate-pulse-subtle">loading...</div>
           </div>
         )}
         {error && (

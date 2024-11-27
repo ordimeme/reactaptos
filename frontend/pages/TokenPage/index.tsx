@@ -15,6 +15,7 @@ import { ChartView } from "./Components/ChartView";
 import { useToast } from "@/components/ui/use-toast";
 import { truncateAddress, getFullAddress } from "@/utils/truncateAddress";
 import { Comments } from "./Components/Comments";
+import { calculate24hPriceChange } from "@/utils/calculations";
 
 export default function TokenPage() {
   const { toast } = useToast();
@@ -76,23 +77,8 @@ export default function TokenPage() {
     setCommentContent("");
   };
 
-  // 计算24小时涨跌幅
-  const priceChange = (() => {
-    const trades = token.trades;
-    if (trades.length < 2) return 0;
-
-    const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    
-    const oldTrade = trades.find(trade => new Date(trade.timestamp) < oneDayAgo);
-    const latestTrade = trades[0];
-
-    if (!oldTrade) return 0;
-
-    return ((latestTrade.aptAmount / latestTrade.tokenAmount) - 
-            (oldTrade.aptAmount / oldTrade.tokenAmount)) / 
-            (oldTrade.aptAmount / oldTrade.tokenAmount) * 100;
-  })();
+  // 使用新的计算函数替换原来的计算逻辑
+  const priceChange = calculate24hPriceChange(token.trades);
 
   // 添加复制函数
   const handleCopyCA = async (address: string) => {

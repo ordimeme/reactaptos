@@ -65,8 +65,8 @@ export function Comments({
 
   return (
     <div className="space-y-4">
-      {/* 标题和评论数量 */}
-      <div className="flex items-center justify-between">
+      {/* 标题和评论数量 - 在桌面端隐藏 */}
+      <div className="flex items-center justify-between lg:hidden">
         <h3 className="text-lg font-semibold">Comments</h3>
         <div className="flex items-center gap-1.5 text-muted-foreground">
           <MessageCircle className="h-4 w-4" />

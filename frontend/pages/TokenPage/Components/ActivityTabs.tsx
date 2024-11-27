@@ -40,7 +40,7 @@ export function ActivityTabs({
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="comments">
+      <TabsContent value="comments" className="outline-none">
         <Comments 
           token={token}
           commentContent={commentContent}
@@ -49,7 +49,7 @@ export function ActivityTabs({
         />
       </TabsContent>
 
-      <TabsContent value="trades">
+      <TabsContent value="trades" className="outline-none">
         <TradesView token={token} />
       </TabsContent>
     </Tabs>
