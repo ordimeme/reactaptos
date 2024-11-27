@@ -166,16 +166,18 @@ const TopCard = ({ title, item }: TopCardProps) => {
                     <div className="font-semibold text-lg md:text-xl">
                       ${item.marketCap.toLocaleString()}
                     </div>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Market Cap</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    {title === "Top Gainer" && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Market Cap</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
                   </div>
                   <div className={`text-sm font-medium ${item.priceChange24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                     {item.priceChange24h >= 0 ? '+' : ''}{item.priceChange24h.toFixed(2)}%
