@@ -420,3 +420,31 @@ body,
 .social-icon {
   animation: iconFadeIn 0.3s ease forwards;
 }
+
+/* 防止移动端弹窗导致的宽度抖动 */
+body {
+  width: 100vw;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 确保弹出层不会影响布局 */
+.radix-dialog-overlay,
+.radix-dropdown-menu-content,
+.radix-select-content {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow: hidden;
+}
+
+/* 防止滚动条出现时的布局抖动 */
+html {
+  width: 100vw;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100vw;
+  overflow-x: hidden;
+}

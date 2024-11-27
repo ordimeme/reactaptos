@@ -114,7 +114,7 @@ export default function MarketsPage() {
 
       {/* Top Cards */}
       <div className="overflow-hidden mb-8">
-        <div className="flex gap-4 overflow-x-auto scrollbar-hide px-4 md:px-0 -mx-4 md:mx-0">
+        <div className="flex md:justify-center gap-4 overflow-x-auto scrollbar-hide px-4 md:px-0 -mx-4 md:mx-0">
           <div className="flex-none w-[85%] md:w-auto">
             <TopCard title="Top Gainer" item={getTopGainer()} />
           </div>

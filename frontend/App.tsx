@@ -62,9 +62,9 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <>
+    <div className="overflow-y-scroll">
       <RouterProvider router={router} />
-    </>
+    </div>
   );
 }
 
