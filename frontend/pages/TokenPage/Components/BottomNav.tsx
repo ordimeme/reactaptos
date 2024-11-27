@@ -1,15 +1,14 @@
 import { cn } from "@/lib/utils";
 
 interface BottomNavProps {
-  activeTab: "buy/sell" | "info" | "chart" | "txs";
-  setActiveTab: (tab: "buy/sell" | "info" | "chart" | "txs") => void;
+  activeTab: "buy/sell" | "info" | "txs";
+  setActiveTab: (tab: "buy/sell" | "info" | "txs") => void;
 }
 
 export function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
   const navItems = [
     { id: "buy/sell", label: "[Buy/Sell]" },
     { id: "info", label: "[Info]" },
-    { id: "chart", label: "[Chart]" },
     { id: "txs", label: "[Txs]" },
   ] as const;
 

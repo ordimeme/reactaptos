@@ -37,7 +37,7 @@ export default function TokenPage() {
   const [priorityFee, setPriorityFee] = useState<string>("0.01");
 
   // 添加移动端导航状态
-  const [mobileTab, setMobileTab] = useState<"buy/sell" | "info" | "chart" | "txs">("buy/sell");
+  const [mobileTab, setMobileTab] = useState<"buy/sell" | "info" | "txs">("buy/sell");
 
   const token = marketData.find(item => item.id === id);
 
@@ -117,7 +117,13 @@ export default function TokenPage() {
     switch (mobileTab) {
       case "buy/sell":
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Chart View */}
+            <div className="lg:hidden">
+              <ChartView token={token} />
+            </div>
+
+            {/* Trade Card */}
             <TradeCard 
               token={{
                 ...token,
@@ -134,9 +140,8 @@ export default function TokenPage() {
               setIsSlippageDialogOpen={setIsSlippageDialogOpen}
             />
 
-            {/* Comments Section */}
-            <div className="mt-4">
-              <h2 className="text-lg font-semibold mb-4">Comments</h2>
+            {/* Comments Section - 调整内边距以对齐 */}
+            <div className="px-2">
               <Comments 
                 token={token}
                 commentContent={commentContent}
@@ -144,12 +149,6 @@ export default function TokenPage() {
                 handleSubmitComment={handleSubmitComment}
               />
             </div>
-          </div>
-        );
-      case "txs":
-        return (
-          <div className="-mx-2">
-            <TradesView token={token} />
           </div>
         );
       case "info":
@@ -161,8 +160,12 @@ export default function TokenPage() {
             }} 
           />
         );
-      case "chart":
-        return <ChartView token={token} />;
+      case "txs":
+        return (
+          <div className="-mx-2">
+            <TradesView token={token} />
+          </div>
+        );
     }
   };
 

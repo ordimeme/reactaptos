@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { Pagination } from "@/components/Pagination";
 import { formatRelativeTime } from "@/utils/formatDate";
+import { MessageCircle } from "lucide-react";
 
 interface CommentsProps {
   token: MarketItem;
@@ -64,6 +65,15 @@ export function Comments({
 
   return (
     <div className="space-y-4">
+      {/* 标题和评论数量 */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Comments</h3>
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <MessageCircle className="h-4 w-4" />
+          <span className="text-sm">{token.comments?.length || 0}</span>
+        </div>
+      </div>
+
       {/* 评论输入区域 */}
       <form onSubmit={handleCommentSubmit} className="space-y-4">
         <Textarea

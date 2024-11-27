@@ -448,3 +448,54 @@ html {
   width: 100vw;
   overflow-x: hidden;
 }
+
+/* 调整移动端图表容器的样式 */
+@media (max-width: 768px) {
+  /* 图表容器样式 */
+  .chart-container {
+    height: 360px;
+    background-color: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    position: relative;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* 确保交易卡片内容正确对齐和间距 */
+  .card-content {
+    position: relative;
+    z-index: 1;
+    padding-top: 1.5rem;
+  }
+
+  /* 图表和交易卡片之间的间距 */
+  .chart-container + * {
+    margin-top: 2.5rem;
+  }
+
+  /* 调整底部导航栏的层级，确保在图表之上 */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background-color: hsl(var(--background));
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  /* 确保页面内容不会被底部导航栏遮挡 */
+  .container {
+    padding-bottom: 5rem;
+  }
+}
+
+/* 确保图表容器在所有设备上都能正确显示 */
+.chart-container {
+  width: 100%;
+  overflow: hidden;
+}
