@@ -104,6 +104,9 @@ module.exports = {
         72: "4.5rem",
         116: "7.25rem",
       },
+      transitionProperty: {
+        'transform': 'transform',
+      },
     },
   },
   plugins: [

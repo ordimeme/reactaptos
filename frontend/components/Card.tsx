@@ -51,27 +51,9 @@ const Card = ({ item }: CardProps) => {
       return '/tokens/default.svg';
     }
     
-    try {
-      // 处理特殊字符，只保留字母和数字
-      const safeName = symbol.toLowerCase().replace(/[^a-z0-9]/g, '');
-      const imageUrl = `/tokens/${safeName}.svg`;
-      
-      // 预加载图片
-      const img = new Image();
-      img.onerror = () => {
-        setImageError(true);
-        // 减少控制台警告的输出
-        if (!imageError) {
-          console.warn(`Failed to load image for ${symbol}`);
-        }
-      };
-      img.src = imageUrl;
-      
-      return imageUrl;
-    } catch (error) {
-      console.error('Error loading image:', error);
-      return '/tokens/default.svg';
-    }
+    // 处理特殊字符，只保留字母和数字
+    const safeName = symbol.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return `/tokens/${safeName}.svg`;
   };
 
   return (
@@ -86,12 +68,13 @@ const Card = ({ item }: CardProps) => {
             loading="lazy"
             onError={(e) => {
               if (!imageError) {
-                console.warn(`Image load failed for ${item.symbol}`);
                 setImageError(true);
-              }
-              const target = e.target as HTMLImageElement;
-              if (!target.src.includes('default.svg')) {
+                const target = e.target as HTMLImageElement;
                 target.src = '/tokens/default.svg';
+                // 只在开发环境下输出警告
+                if (process.env.NODE_ENV === 'development') {
+                  console.warn(`Token image not found: ${item.symbol}`);
+                }
               }
             }}
           />

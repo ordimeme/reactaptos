@@ -23,6 +23,19 @@ const ActivityScroll: React.FC<ActivityScrollProps> = ({
   initialCount 
 }) => {
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [imageCache, setImageCache] = useState<Record<string, boolean>>({});
+
+  const getSafeImageUrl = (symbol: string) => {
+    if (imageCache[symbol] === false) {
+      return '/tokens/default.svg'
+    }
+    try {
+      return `/tokens/${symbol.toLowerCase()}.svg`
+    } catch {
+      return '/tokens/default.svg'
+    }
+  }
 
   useEffect(() => {
     const generateActivity = () => {
@@ -44,26 +57,58 @@ const ActivityScroll: React.FC<ActivityScrollProps> = ({
 
     setActivities(Array.from({ length: initialCount }, generateActivity));
 
-    const timer = setInterval(() => {
-      setActivities(prev => [generateActivity(), ...prev.slice(0, -1)]);
-    }, updateInterval);
+    let animationFrameId: number;
+    let lastTimestamp: number;
 
-    return () => clearInterval(timer);
-  }, [initialCount, updateInterval]);
+    const animate = (timestamp: number) => {
+      if (!lastTimestamp) lastTimestamp = timestamp;
+      const progress = timestamp - lastTimestamp;
+      
+      setScrollPosition(prevPosition => {
+        const scrollSpeed = 0.015 * (30 / speed);
+        const newPosition = prevPosition - (progress * scrollSpeed);
+        return newPosition <= -50 ? 0 : newPosition;
+      });
+      
+      lastTimestamp = timestamp;
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [initialCount, updateInterval, speed]);
 
   return (
     <div className="bg-muted/20 rounded-lg p-2 overflow-hidden">
       <div 
-        className="flex gap-6 animate-scroll-fast"
-        style={{ animation: `scroll-fast ${speed}s linear infinite` }}
+        className="flex gap-6"
+        style={{ 
+          transform: `translateX(${scrollPosition}%)`,
+          willChange: 'transform'
+        }}
       >
-        {/* 原始活动数据 */}
         {activities.map((activity, index) => (
-          <ActivityItem key={index} activity={activity} />
+          <ActivityItem 
+            key={index} 
+            activity={activity}
+            imageCache={imageCache}
+            setImageCache={setImageCache}
+            getSafeImageUrl={getSafeImageUrl}
+          />
         ))}
-        {/* 复制的活动数据，用于无缝滚动 */}
         {activities.map((activity, index) => (
-          <ActivityItem key={`repeat-${index}`} activity={activity} />
+          <ActivityItem 
+            key={`repeat-${index}`} 
+            activity={activity}
+            imageCache={imageCache}
+            setImageCache={setImageCache}
+            getSafeImageUrl={getSafeImageUrl}
+          />
         ))}
       </div>
     </div>
@@ -71,11 +116,33 @@ const ActivityScroll: React.FC<ActivityScrollProps> = ({
 };
 
 // 活动项组件
-const ActivityItem = ({ activity }: { activity: Activity }) => (
+const ActivityItem = ({ 
+  activity, 
+  imageCache,
+  setImageCache,
+  getSafeImageUrl
+}: { 
+  activity: Activity;
+  imageCache: Record<string, boolean>;
+  setImageCache: (cache: Record<string, boolean>) => void;
+  getSafeImageUrl: (symbol: string) => string;
+}) => (
   <Link 
     to={`/token/${activity.tokenId}`}
-    className="flex items-center gap-2 text-sm whitespace-nowrap hover:bg-muted/20 px-2 py-1 rounded-md transition-colors"
+    className="flex items-center gap-2 text-sm whitespace-nowrap hover:bg-muted/20 px-2 py-1 rounded-md transition-colors shrink-0"
   >
+    <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+      <img
+        src={getSafeImageUrl(activity.symbol)}
+        alt={activity.symbol}
+        className="w-full h-full object-cover"
+        onError={() => {
+          const newCache = { ...imageCache };
+          newCache[activity.symbol] = false;
+          setImageCache(newCache);
+        }}
+      />
+    </div>
     <span className={`
       px-2 py-0.5 rounded-full text-xs font-medium
       ${activity.type === 'buy' ? 'bg-green-500/20 text-green-500' : 

@@ -117,7 +117,7 @@ export default function TokenPage() {
     switch (mobileTab) {
       case "buy/sell":
         return (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <TradeCard 
               token={{
                 ...token,
@@ -135,7 +135,7 @@ export default function TokenPage() {
             />
 
             {/* Comments Section */}
-            <div className="mt-6">
+            <div className="mt-4">
               <h2 className="text-lg font-semibold mb-4">Comments</h2>
               <Comments 
                 token={token}
@@ -148,9 +148,9 @@ export default function TokenPage() {
         );
       case "txs":
         return (
-          <TradesView 
-            token={token}
-          />
+          <div className="-mx-2">
+            <TradesView token={token} />
+          </div>
         );
       case "info":
         return (
@@ -300,7 +300,7 @@ export default function TokenPage() {
         </div>
       </div>
 
-      {/* 移动端布局 - 优化间距和内边距 */}
+      {/* 移动端布局 */}
       <div className="lg:hidden space-y-4">
         {renderMobileContent()}
       </div>

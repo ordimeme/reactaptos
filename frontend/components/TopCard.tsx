@@ -115,16 +115,11 @@ const TopCard = ({ title, item }: TopCardProps) => {
   return (
     <Link 
       to={`/token/${item.id}`} 
-      className={cn(
-        "shrink-0",
-        "w-[95vw]",
-        "sm:w-[520px]",
-        "md:w-[820px] lg:w-[920px]"
-      )}
+      className="block w-full"
     >
-      <UICard className="group hover:shadow-md transition-all duration-300 rounded-[10px] cursor-pointer border-muted/40 dark:border-muted/20 focus:outline-none bg-[var(--softBg)] backdrop-blur-sm">
-        <CardHeader className="pb-4 px-6 md:px-12">
-          <div className="flex items-center px-2">
+      <UICard className="group hover:shadow-md transition-all duration-300 rounded-[10px] cursor-pointer border-muted/40 dark:border-muted/20 focus:outline-none bg-[var(--softBg)] backdrop-blur-sm h-full">
+        <CardHeader className="pb-3 px-3 md:px-8">
+          <div className="flex items-center">
             <CardTitle className="text-sm md:text-base font-medium flex items-center gap-2">
               {title}
               {title === "Top Gainer" && (
@@ -136,10 +131,15 @@ const TopCard = ({ title, item }: TopCardProps) => {
             </CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="px-6 md:px-12 pb-10">
-          <div className="flex items-center gap-8 md:gap-12">
+        <CardContent className="px-3 md:px-8 pb-6">
+          <div className="flex items-center gap-4 md:gap-12">
             {/* 左侧：图标 */}
-            <div className="w-20 h-20 md:w-24 md:h-24 overflow-hidden rounded-[12px] flex items-center justify-center bg-background">
+            <div className={cn(
+              "overflow-hidden rounded-[12px] flex items-center justify-center bg-background",
+              title === "Top Gainer" 
+                ? "w-20 h-20 md:w-24 md:h-24"
+                : "w-12 h-12 md:w-24 md:h-24" // Top Volume图标更小
+            )}>
               <img 
                 src={getSafeImageUrl(item.symbol)}
                 alt={item.name}
@@ -154,7 +154,7 @@ const TopCard = ({ title, item }: TopCardProps) => {
             </div>
 
             {/* 右侧：信息 */}
-            <div className="flex-1 space-y-6 md:space-y-8">
+            <div className="flex-1 space-y-6 md:space-y-8 hide-on-small">
               {/* 名称和市值 */}
               <div className="flex justify-between items-start gap-4">
                 <div className="min-w-0 flex-1">

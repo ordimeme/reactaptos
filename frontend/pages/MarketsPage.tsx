@@ -114,16 +114,12 @@ export default function MarketsPage() {
 
       {/* Top Cards */}
       <div className="overflow-hidden mb-8">
-        <div className="flex snap-x snap-mandatory touch-pan-x overflow-x-auto scrollbar-hide">
-          <div className="flex md:justify-center md:w-full">
-            <div className="flex gap-4 md:gap-8 min-w-min md:mx-auto">
-              <div className="snap-start">
-                <TopCard title="Top Gainer" item={getTopGainer()} />
-              </div>
-              <div className="snap-start">
-                <TopCard title="Top Volume" item={getTopVolume()} />
-              </div>
-            </div>
+        <div className="flex gap-4 overflow-x-auto scrollbar-hide px-4 md:px-0 -mx-4 md:mx-0">
+          <div className="flex-none w-[85%] md:w-auto">
+            <TopCard title="Top Gainer" item={getTopGainer()} />
+          </div>
+          <div className="flex-none w-[85%] md:w-auto">
+            <TopCard title="Top Volume" item={getTopVolume()} />
           </div>
         </div>
       </div>
