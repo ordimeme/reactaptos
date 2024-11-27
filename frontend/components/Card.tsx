@@ -50,14 +50,26 @@ const Card = ({ item }: CardProps) => {
     if (imageError) {
       return '/tokens/default.svg';
     }
-    const safeName = symbol.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
     try {
+      // 处理特殊字符，只保留字母和数字
+      const safeName = symbol.toLowerCase().replace(/[^a-z0-9]/g, '');
       const imageUrl = `/tokens/${safeName}.svg`;
+      
+      // 预加载图片
       const img = new Image();
+      img.onerror = () => {
+        setImageError(true);
+        // 减少控制台警告的输出
+        if (!imageError) {
+          console.warn(`Failed to load image for ${symbol}`);
+        }
+      };
       img.src = imageUrl;
-      img.onerror = () => setImageError(true);
+      
       return imageUrl;
-    } catch {
+    } catch (error) {
+      console.error('Error loading image:', error);
       return '/tokens/default.svg';
     }
   };
@@ -72,7 +84,16 @@ const Card = ({ item }: CardProps) => {
             alt={item.name}
             className="w-8 h-8 object-contain transition-transform duration-300 group-hover:scale-110"
             loading="lazy"
-            onError={() => setImageError(true)}
+            onError={(e) => {
+              if (!imageError) {
+                console.warn(`Image load failed for ${item.symbol}`);
+                setImageError(true);
+              }
+              const target = e.target as HTMLImageElement;
+              if (!target.src.includes('default.svg')) {
+                target.src = '/tokens/default.svg';
+              }
+            }}
           />
         </div>
         <div className="flex-1 min-w-0">

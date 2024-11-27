@@ -41,10 +41,9 @@ const SortAndSearch: React.FC<SortAndSearchProps> = ({
           <SelectItem value="featured">Featured</SelectItem>
           <SelectItem value="last-trade">Last Trade</SelectItem>
           <SelectItem value="last-reply">Last Reply</SelectItem>
-          <SelectItem value="market-cap-high">Market Cap (High to Low)</SelectItem>
-          <SelectItem value="market-cap-low">Market Cap (Low to High)</SelectItem>
-          <SelectItem value="volume-24h-high">24h Volume (High to Low)</SelectItem>
-          <SelectItem value="volume-7d-high">7d Volume (High to Low)</SelectItem>
+          <SelectItem value="market-cap-high">Market Cap</SelectItem>
+          <SelectItem value="volume-24h-high">24h Volume</SelectItem>
+          <SelectItem value="volume-7d-high">7d Volume</SelectItem>
         </SelectContent>
       </Select>
       <Select value={filterBy} onValueChange={setFilterBy}>
