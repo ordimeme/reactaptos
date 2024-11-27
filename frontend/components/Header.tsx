@@ -38,7 +38,7 @@ export function Header() {
               src={theme === 'dark' ? '/aptos-dark.svg' : '/aptos.png'} 
               alt='React + Aptos'
               title='React + Aptos'
-              className="h-8 md:h-12 w-auto"
+              className="h-12 w-auto"
             />
             <h1 className="font-bold text-xl md:text-4xl hidden md:block">Aptostar</h1>
           </Link>

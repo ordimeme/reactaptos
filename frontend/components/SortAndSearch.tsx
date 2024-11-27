@@ -37,7 +37,7 @@ const SortAndSearch: React.FC<SortAndSearchProps> = ({
           <SelectValue placeholder="Sort by" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="creation-time">Creation Time</SelectItem>
+          <SelectItem value="creation-time">Latest</SelectItem>
           <SelectItem value="featured">Featured</SelectItem>
           <SelectItem value="last-trade">Last Trade</SelectItem>
           <SelectItem value="last-reply">Last Reply</SelectItem>
@@ -51,11 +51,11 @@ const SortAndSearch: React.FC<SortAndSearchProps> = ({
           <SelectValue placeholder="Filter by" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All</SelectItem>
-          <SelectItem value="bonding-0-25">Bonding 0-25%</SelectItem>
-          <SelectItem value="bonding-25-50">Bonding 25-50%</SelectItem>
-          <SelectItem value="bonding-50-75">Bonding 50-75%</SelectItem>
-          <SelectItem value="bonding-75-100">Bonding 75-100%</SelectItem>
+          <SelectItem value="all">Progress</SelectItem>
+          <SelectItem value="bonding-0-25">Progress: 0-25%</SelectItem>
+          <SelectItem value="bonding-25-50">Progress: 25-50%</SelectItem>
+          <SelectItem value="bonding-50-75">Progress: 50-75%</SelectItem>
+          <SelectItem value="bonding-75-100">Progress: 75-100%</SelectItem>
         </SelectContent>
       </Select>
     </div>
