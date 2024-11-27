@@ -22,7 +22,7 @@ const Markets = () => {
   const [filterBy, setFilterBy] = useState<string>("all")
   const [imageCache, setImageCache] = useState<{ [key: string]: boolean }>({});
 
-  // 预加载所有图片
+  // 修改预加载图片逻辑
   useEffect(() => {
     const preloadImages = async () => {
       const newImageCache = { ...imageCache };
@@ -32,12 +32,8 @@ const Markets = () => {
         const imageUrl = `/tokens/${safeName}.svg`;
         
         try {
-          const img = new Image();
-          img.src = imageUrl;
-          await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-          });
+          const response = await fetch(imageUrl);
+          if (!response.ok) throw new Error('Image not found');
           newImageCache[item.symbol] = true;
         } catch (error) {
           console.warn(`Failed to load image for ${item.symbol}`);
@@ -51,8 +47,11 @@ const Markets = () => {
     preloadImages();
   }, []);
 
-  // 获取安全的图片URL并处理加载状态
+  // 修改获取安全图片URL的逻辑
   const getSafeImageUrl = (symbol: string) => {
+    if (imageCache[symbol] === false) {
+      return '/tokens/default.svg';
+    }
     const safeName = symbol.toLowerCase().replace(/[^a-z0-9]/g, '');
     return `/tokens/${safeName}.svg`;
   };
@@ -72,19 +71,17 @@ const Markets = () => {
         <CardContent>
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 overflow-hidden rounded-[10px] flex items-center justify-center bg-muted/50 dark:bg-muted/20">
-              {imageCache[item.symbol] !== false && (
-                <img 
-                  src={getSafeImageUrl(item.symbol)}
-                  alt={item.name}
-                  className="w-full h-full transition-transform duration-300 group-hover:scale-110"
-                  loading="lazy"
-                  onError={() => {
-                    const newCache = { ...imageCache };
-                    newCache[item.symbol] = false;
-                    setImageCache(newCache);
-                  }}
-                />
-              )}
+              <img 
+                src={getSafeImageUrl(item.symbol)}
+                alt={item.name}
+                className="w-full h-full transition-transform duration-300 group-hover:scale-110"
+                loading="lazy"
+                onError={() => {
+                  const newCache = { ...imageCache };
+                  newCache[item.symbol] = false;
+                  setImageCache(newCache);
+                }}
+              />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-base md:text-sm truncate">{item.name}</h3>
@@ -192,7 +189,7 @@ const Markets = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* 使用活动滚动���组件 */}
+      {/* 使用活动滚动组件 */}
       <div className="mb-8">
         <ActivityScroll 
           speed={30}

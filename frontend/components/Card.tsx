@@ -11,6 +11,7 @@ interface CardProps {
 const Card = ({ item }: CardProps) => {
   const [copySuccess, setCopySuccess] = useState(false);
   const [, forceUpdate] = useState({});
+  const [imageError, setImageError] = useState(false);
 
   // 每秒更新时间显示
   useEffect(() => {
@@ -74,6 +75,9 @@ const Card = ({ item }: CardProps) => {
 
   // 获取安全的图片URL
   const getSafeImageUrl = (symbol: string) => {
+    if (imageError) {
+      return '/tokens/default.svg'; // 使用默认图片
+    }
     const safeName = symbol.toLowerCase().replace(/[^a-z0-9]/g, '');
     return `/tokens/${safeName}.svg`;
   };
@@ -84,13 +88,12 @@ const Card = ({ item }: CardProps) => {
       <div className="flex items-center gap-3 mb-3">
         <div className="w-12 h-12 overflow-hidden rounded-[10px] flex items-center justify-center bg-muted/50 dark:bg-muted/20">
           <img 
-            src={getSafeImageUrl(item.symbol)} // 使用安全的图片URL
+            src={getSafeImageUrl(item.symbol)}
             alt={item.name}
             className="w-full h-full transition-transform duration-300 group-hover:scale-110"
             loading="lazy"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = getSafeImageUrl(item.symbol);
+            onError={() => {
+              setImageError(true);
             }}
           />
         </div>
