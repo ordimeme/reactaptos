@@ -91,8 +91,8 @@ export default function TokenPage() {
     }
   };
 
-  // 分别维护最新价格和图表交互价格
-  const [latestPrice, setLatestPrice] = useState<PriceData>({
+  // 在组件顶部添加price状态
+  const [currentPrice, setCurrentPrice] = useState<PriceData>({
     open: token?.price.toFixed(2) || '0.00',
     high: token?.price.toFixed(2) || '0.00',
     low: token?.price.toFixed(2) || '0.00',
@@ -110,9 +110,9 @@ export default function TokenPage() {
     changePercent: '0.00'
   });
 
-  // 处理最新价格更新
+  // 修改handlePriceUpdate函数
   const handlePriceUpdate = useCallback((newPrice: PriceData) => {
-    setLatestPrice(newPrice);  // 只更新最新价格
+    setCurrentPrice(newPrice);
   }, []);
 
   // 处理图表hover价格更新（可选，如果需要在其他地方使用）
@@ -139,7 +139,7 @@ export default function TokenPage() {
               token={token} 
               onPriceUpdate={handlePriceUpdate}
               onHoverPriceChange={handleHoverPriceChange}
-              initialPrice={latestPrice}
+              initialPrice={currentPrice}
             />
 
             <TradeCard 
@@ -223,13 +223,13 @@ export default function TokenPage() {
             {/* 右侧价格信息 */}
             <div className="text-right flex-shrink-0">
               <p className="text-lg sm:text-xl md:text-2xl font-bold">
-                ${latestPrice.close}
+                ${currentPrice.close}
               </p>
               <p className={`text-xs sm:text-sm ${
-                parseFloat(latestPrice.change24h) >= 0 ? "text-green-500" : "text-red-500"
+                parseFloat(currentPrice.change24h) >= 0 ? "text-green-500" : "text-red-500"
               }`}>
-                ({parseFloat(latestPrice.change24h) >= 0 ? "+" : ""}
-                {latestPrice.change24h}% 24h)
+                ({parseFloat(currentPrice.change24h) >= 0 ? "+" : ""}
+                {currentPrice.change24h}% 24h)
               </p>
             </div>
 
@@ -297,7 +297,7 @@ export default function TokenPage() {
             token={token} 
             onPriceUpdate={handlePriceUpdate}
             onHoverPriceChange={handleHoverPriceChange}
-            initialPrice={latestPrice}
+            initialPrice={currentPrice}
           />
           <ActivityTabs 
             token={token}

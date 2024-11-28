@@ -138,7 +138,7 @@ export function ChartView({ token, onPriceUpdate, onHoverPriceChange, initialPri
     onPriceUpdate?.(newPrice);
   }, [onPriceUpdate]);
 
-  // 3. 义更新价格数据的函数
+  // 3. 更新价格数据的函数
   const updatePriceData = useCallback(() => {
     if (isHoveringRef.current) return;
 
@@ -169,7 +169,7 @@ export function ChartView({ token, onPriceUpdate, onHoverPriceChange, initialPri
       
       // 只在非悬停状态更新当前视图价格
       setCurrentViewPrice(newPrice);
-      // 始终更新最新价格
+      // 通知父组件更新价格
       onPriceUpdate?.(newPrice);
     }
   }, [chartData, get24hData, calculate24hChange, calculateChangePercent, onPriceUpdate]);
@@ -434,10 +434,12 @@ export function ChartView({ token, onPriceUpdate, onHoverPriceChange, initialPri
               changePercent
             };
             setCurrentViewPrice(newPrice);
-            onHoverPriceChange?.(newPrice);
+            // 在hover时不更新父组件的价格
+            // onHoverPriceChange?.(newPrice);
           }
         } else {
           isHoveringRef.current = false;
+          // 当鼠标离开图表时，更新为最新价格
           updatePriceData();
         }
       });
@@ -500,6 +502,15 @@ export function ChartView({ token, onPriceUpdate, onHoverPriceChange, initialPri
   useEffect(() => {
     updateChartData(); // 立即更新一次数据
   }, [selectedInterval, updateChartData]);
+
+  // 在组件初始化时更新价格
+  useEffect(() => {
+    if (initialPrice) {
+      setCurrentViewPrice(initialPrice);
+    } else {
+      updatePriceData();
+    }
+  }, [initialPrice, updatePriceData]);
 
   return (
     <Card className="border-muted/40 dark:border-muted/20 w-full">
