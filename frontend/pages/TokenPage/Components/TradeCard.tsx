@@ -1,10 +1,11 @@
-import { useContext } from "react";
+import { useContext, useCallback } from "react";
 import { ThemeContext } from "@/context/ThemeContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { MarketItem } from "@/data/marketData";
+import { formatTokenAmount } from "@/utils/clampNumber";
 
 interface TradeCardProps {
   token: MarketItem;
@@ -14,9 +15,12 @@ interface TradeCardProps {
   setTradeType: (type: "buy" | "sell") => void;
   setTokenType: (type: "APT" | "APT") => void;
   setAmount: (amount: string) => void;
-  handleQuickAmount: (amount: string) => void;
   handleReset: () => void;
   setIsSlippageDialogOpen: (open: boolean) => void;
+  isWalletConnected?: boolean;
+  onConnectWallet?: () => void;
+  aptBalance?: number;
+  tokenBalance?: number;
 }
 
 export function TradeCard({
@@ -27,11 +31,64 @@ export function TradeCard({
   setTradeType,
   setTokenType,
   setAmount,
-  handleQuickAmount,
   handleReset,
-  setIsSlippageDialogOpen
+  setIsSlippageDialogOpen,
+  isWalletConnected = false,
+  onConnectWallet,
+  aptBalance = 0,
+  tokenBalance = 0
 }: TradeCardProps) {
   const { theme } = useContext(ThemeContext);
+
+  const handleQuickSelect = useCallback((value: string) => {
+    if (!isWalletConnected) {
+      onConnectWallet?.();
+      return;
+    }
+
+    if (tradeType === "sell") {
+      const percentage = parseFloat(value.replace("%", "")) / 100;
+      const balance = tokenBalance;
+      const calculatedAmount = (balance * percentage).toFixed(8);
+      setAmount(calculatedAmount);
+    } else if (tradeType === "buy" && tokenType === "APT") {
+      const aptAmount = parseFloat(value.replace(" APT", ""));
+      if (aptAmount <= aptBalance) {
+        setAmount(aptAmount.toString());
+      } else {
+        console.warn("Insufficient APT balance");
+      }
+    }
+  }, [isWalletConnected, tradeType, tokenType, aptBalance, tokenBalance, onConnectWallet, setAmount]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === "") {
+      setAmount("");
+      return;
+    }
+
+    try {
+      const numValue = parseFloat(value);
+      if (isNaN(numValue)) return;
+
+      if (tradeType === "sell") {
+        if (numValue > tokenBalance) {
+          setAmount(tokenBalance.toString());
+        } else {
+          setAmount(value);
+        }
+      } else {
+        if (tokenType === "APT" && numValue > aptBalance) {
+          setAmount(aptBalance.toString());
+        } else {
+          setAmount(value);
+        }
+      }
+    } catch (error) {
+      console.error("Invalid input:", error);
+    }
+  }, [tradeType, tokenType, aptBalance, tokenBalance, setAmount]);
 
   return (
     <Card className="border-muted/40 dark:border-muted/20">
@@ -96,10 +153,11 @@ export function TradeCard({
           <div className="relative">
             <Input
               type="number"
-              placeholder="0.0"
+              placeholder=""
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={handleInputChange}
               className="pr-24 text-xl h-14 bg-muted/20"
+              disabled={!isWalletConnected}
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
               {tradeType === "buy" ? (
@@ -139,70 +197,39 @@ export function TradeCard({
               size="sm"
               className="flex-1 bg-muted/20 hover:bg-muted"
               onClick={handleReset}
+              disabled={!isWalletConnected}
             >
               Reset
             </Button>
             {tradeType === "sell" ? (
               <>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex-1 bg-muted/20 hover:bg-muted"
-                  onClick={() => handleQuickAmount("25%")}
-                >
-                  25%
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex-1 bg-muted/20 hover:bg-muted"
-                  onClick={() => handleQuickAmount("50%")}
-                >
-                  50%
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex-1 bg-muted/20 hover:bg-muted"
-                  onClick={() => handleQuickAmount("75%")}
-                >
-                  75%
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex-1 bg-muted/20 hover:bg-muted"
-                  onClick={() => handleQuickAmount("100%")}
-                >
-                  100%
-                </Button>
+                {[25, 50, 75, 100].map((percent) => (
+                  <Button 
+                    key={percent}
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1 bg-muted/20 hover:bg-muted"
+                    onClick={() => handleQuickSelect(`${percent}%`)}
+                    disabled={!isWalletConnected}
+                  >
+                    {percent}%
+                  </Button>
+                ))}
               </>
             ) : tokenType === "APT" && (
               <>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex-1 bg-muted/20 hover:bg-muted"
-                  onClick={() => handleQuickAmount("1 APT")}
-                >
-                  1 APT
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex-1 bg-muted/20 hover:bg-muted"
-                  onClick={() => handleQuickAmount("5 APT")}
-                >
-                  5 APT
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex-1 bg-muted/20 hover:bg-muted"
-                  onClick={() => handleQuickAmount("20 APT")}
-                >
-                  20 APT
-                </Button>
+                {[1, 5, 20].map((aptAmount) => (
+                  <Button 
+                    key={aptAmount}
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1 bg-muted/20 hover:bg-muted"
+                    onClick={() => handleQuickSelect(`${aptAmount} APT`)}
+                    disabled={!isWalletConnected || aptAmount > aptBalance}
+                  >
+                    {aptAmount} APT
+                  </Button>
+                ))}
               </>
             )}
           </div>
@@ -211,21 +238,33 @@ export function TradeCard({
           <Button 
             className={cn(
               "w-full text-white",
-              tradeType === "buy" 
-                ? "bg-[#2ecc71] hover:bg-[#2ecc71]/90" 
-                : "bg-[#e74c3c] hover:bg-[#e74c3c]/90"
+              !isWalletConnected 
+                ? "bg-blue-500 hover:bg-blue-600"
+                : tradeType === "buy" 
+                  ? "bg-[#2ecc71] hover:bg-[#2ecc71]/90" 
+                  : "bg-[#e74c3c] hover:bg-[#e74c3c]/90"
             )}
+            onClick={!isWalletConnected ? onConnectWallet : undefined}
+            disabled={isWalletConnected && amount === ""}
           >
-            Place Trade
+            {!isWalletConnected ? "Connect Wallet" : "Place Trade"}
           </Button>
 
-          {/* Add Comment Checkbox */}
-          <div className="flex items-center gap-2">
-            <input 
-              type="checkbox" 
-              className="rounded border-muted-foreground/50"
-            />
-            <span className="text-muted-foreground">Add Comment</span>
+          {/* Add Comment Checkbox and Balances */}
+          <div className="flex items-center justify-between">
+            {isWalletConnected && (
+              <div className="text-left text-xs text-muted-foreground">
+                <div>APT: {formatTokenAmount(aptBalance)}</div>
+                <div>{token.symbol}: {formatTokenAmount(tokenBalance)}</div>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                className="rounded border-muted-foreground/50"
+              />
+              <span className="text-muted-foreground">Add Comment</span>
+            </div>
           </div>
         </div>
       </CardContent>

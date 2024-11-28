@@ -5,6 +5,7 @@ import { useState } from "react"
 import { truncateAddress, getFullAddress } from "@/utils/truncateAddress"
 import { useToast } from "./ui/use-toast"
 import { ProgressRing } from "./ProgressRing"
+import { formatRelativeTime } from "@/utils/formatDate"
 
 interface CardProps {
   item: MarketItem
@@ -16,7 +17,7 @@ const Card = ({ item }: CardProps) => {
 
   // 处理复制功能
   const handleCopy = async (e: React.MouseEvent, address: string) => {
-    e.preventDefault(); // 阻止事件冒泡，防止触发卡片点击
+    e.preventDefault();
     e.stopPropagation();
     
     try {
@@ -35,25 +36,20 @@ const Card = ({ item }: CardProps) => {
     }
   };
 
-  // 格式化时间
-  const formatTime = (timestamp: string) => {
-    const seconds = Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000);
-    
-    if (seconds < 60) {
-      return `${seconds}s ago`;
-    }
-    return `${Math.floor(seconds / 60)}m ago`;
-  };
-
   // 获取安全的图片URL
   const getSafeImageUrl = (symbol: string) => {
     if (imageError) {
       return '/tokens/default.svg';
     }
-    
-    // 处理特殊字符，只保留字母和数字
     const safeName = symbol.toLowerCase().replace(/[^a-z0-9]/g, '');
     return `/tokens/${safeName}.svg`;
+  };
+
+  // 处理描述文本截断
+  const truncateDescription = (text: string) => {
+    const maxLength = 85; // 约为两行文本的0.618位置
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + ' ...';
   };
 
   return (
@@ -71,7 +67,6 @@ const Card = ({ item }: CardProps) => {
                 setImageError(true);
                 const target = e.target as HTMLImageElement;
                 target.src = '/tokens/default.svg';
-                // 只在开发环境下输出警告
                 if (process.env.NODE_ENV === 'development') {
                   console.warn(`Token image not found: ${item.symbol}`);
                 }
@@ -91,6 +86,15 @@ const Card = ({ item }: CardProps) => {
         </div>
       </div>
 
+      {/* Token Description */}
+      {item.description && (
+        <div className="mt-3">
+          <p className="text-sm text-muted-foreground leading-5">
+            {truncateDescription(item.description)}
+          </p>
+        </div>
+      )}
+
       {/* CA 和时间信息 */}
       <div className="mt-4 flex items-center gap-2">
         <span className="text-sm text-muted-foreground whitespace-nowrap">CA:</span>
@@ -105,7 +109,7 @@ const Card = ({ item }: CardProps) => {
             <Copy className="h-3.5 w-3.5" />
           </Button>
         </div>
-        <span className="text-sm text-muted-foreground ml-auto">{formatTime(item.timestamp)}</span>
+        <span className="text-sm text-muted-foreground ml-auto">{formatRelativeTime(item.timestamp)}</span>
       </div>
 
       {/* Progress & Comments */}

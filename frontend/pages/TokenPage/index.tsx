@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { marketData } from "@/data/marketData";
 import { TokenInfo } from "./Components/TokenInfo";
@@ -11,11 +11,10 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import { TradesView } from "./Components/TradesView";
-import { ChartView } from "./Components/ChartView";
+import { ChartView, PriceData } from "./Components/ChartView";
 import { useToast } from "@/components/ui/use-toast";
 import { truncateAddress, getFullAddress } from "@/utils/truncateAddress";
 import { Comments } from "./Components/Comments";
-import { calculate24hPriceChange } from "@/utils/calculations";
 
 export default function TokenPage() {
   const { toast } = useToast();
@@ -29,7 +28,7 @@ export default function TokenPage() {
   // 交易相关状态
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
   const [tokenType, setTokenType] = useState<"APT" | "APT">("APT");
-  const [amount, setAmount] = useState<string>("0.0");
+  const [amount, setAmount] = useState<string>("");
   
   // 滑点设置相关状态
   const [isSlippageDialogOpen, setIsSlippageDialogOpen] = useState(false);
@@ -39,6 +38,11 @@ export default function TokenPage() {
 
   // 添加移动端导航状态
   const [mobileTab, setMobileTab] = useState<"buy/sell" | "info" | "txs">("buy/sell");
+
+  // 添加钱包相关状态
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [aptBalance, setAptBalance] = useState(0);
+  const [tokenBalance, setTokenBalance] = useState(0);
 
   const token = marketData.find(item => item.id === id);
 
@@ -55,20 +59,9 @@ export default function TokenPage() {
     }
   };
 
-  // 处理快速选择按钮点击
-  const handleQuickAmount = (amount: string) => {
-    if (tradeType === "sell") {
-      const percentage = parseFloat(amount.replace("%", "")) / 100;
-      const userBalance = 1000; // 示例数值，实际应该从钱包获取
-      setAmount((userBalance * percentage).toString());
-    } else if (tradeType === "buy" && tokenType === "APT") {
-      setAmount(amount.replace(" APT", ""));
-    }
-  };
-
   // Reset 功能
   const handleReset = () => {
-    setAmount("0.0");
+    setAmount("");
   };
 
   // 提交评论
@@ -78,7 +71,7 @@ export default function TokenPage() {
   };
 
   // 使用新的计算函数替换原来的计算逻辑
-  const priceChange = calculate24hPriceChange(token.trades);
+  // const priceChange = calculate24hPriceChange(token.trades);
 
   // 添加复制函数
   const handleCopyCA = async (address: string) => {
@@ -98,18 +91,57 @@ export default function TokenPage() {
     }
   };
 
+  // 分别维护最新价格和图表交互价格
+  const [latestPrice, setLatestPrice] = useState<PriceData>({
+    open: token?.price.toFixed(2) || '0.00',
+    high: token?.price.toFixed(2) || '0.00',
+    low: token?.price.toFixed(2) || '0.00',
+    close: token?.price.toFixed(2) || '0.00',
+    time: new Date().toLocaleString('en-US', { 
+      timeZone: 'Asia/Shanghai',
+      hour12: false 
+    }),
+    price24h: token?.price.toFixed(2) || '0.00',
+    time24h: new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleString('en-US', {
+      timeZone: 'Asia/Shanghai',
+      hour12: false
+    }),
+    change24h: '0.00',
+    changePercent: '0.00'
+  });
+
+  // 处理最新价格更新
+  const handlePriceUpdate = useCallback((newPrice: PriceData) => {
+    setLatestPrice(newPrice);  // 只更新最新价格
+  }, []);
+
+  // 处理图表hover价格更新（可选，如果需要在其他地方使用）
+  const handleHoverPriceChange = useCallback(() => {
+    // 如果不需要处理 hover 价格变化，可以保留一个空函数
+  }, []);
+
+  // 添加连接钱包处理函数
+  const handleConnectWallet = useCallback(() => {
+    // 这里添加实际的钱包连接逻辑
+    setIsWalletConnected(true);
+    // 模拟余额，实际应该从钱包获取
+    setAptBalance(1234.5678);
+    setTokenBalance(987654.321);
+  }, []);
+
   // 渲染移动端内容
   const renderMobileContent = () => {
     switch (mobileTab) {
       case "buy/sell":
         return (
           <div className="space-y-6">
-            {/* Chart View */}
-            <div className="lg:hidden">
-              <ChartView token={token} />
-            </div>
+            <ChartView 
+              token={token} 
+              onPriceUpdate={handlePriceUpdate}
+              onHoverPriceChange={handleHoverPriceChange}
+              initialPrice={latestPrice}
+            />
 
-            {/* Trade Card */}
             <TradeCard 
               token={{
                 ...token,
@@ -121,12 +153,14 @@ export default function TokenPage() {
               setTradeType={setTradeType}
               setTokenType={setTokenType}
               setAmount={setAmount}
-              handleQuickAmount={handleQuickAmount}
               handleReset={handleReset}
               setIsSlippageDialogOpen={setIsSlippageDialogOpen}
+              isWalletConnected={isWalletConnected}
+              onConnectWallet={handleConnectWallet}
+              aptBalance={aptBalance}
+              tokenBalance={tokenBalance}
             />
 
-            {/* Comments Section - 调整内边距以对齐 */}
             <div className="px-2">
               <Comments 
                 token={token}
@@ -157,7 +191,7 @@ export default function TokenPage() {
 
   return (
     <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 pb-[140px] lg:pb-8">
-      {/* Token Info Card */}
+      {/* Token Info Card - 使用最新价格 */}
       <Card className="border-muted/40 dark:border-muted/20 mb-4 sm:mb-8">
         <CardHeader className="flex flex-col gap-4 p-3 sm:p-6">
           {/* 顶部区域：图标和价格 */}
@@ -188,11 +222,18 @@ export default function TokenPage() {
 
             {/* 右侧价格信息 */}
             <div className="text-right flex-shrink-0">
-              <p className="text-lg sm:text-xl md:text-2xl font-bold">${token.price.toFixed(2)}</p>
-              <p className={`text-xs sm:text-sm ${priceChange >= 0 ? "text-green-500" : "text-red-500"}`}>
-                ({priceChange >= 0 ? "+" : ""}{priceChange.toFixed(2)}% 24h)
+              <p className="text-lg sm:text-xl md:text-2xl font-bold">
+                ${latestPrice.close}
+              </p>
+              <p className={`text-xs sm:text-sm ${
+                parseFloat(latestPrice.change24h) >= 0 ? "text-green-500" : "text-red-500"
+              }`}>
+                ({parseFloat(latestPrice.change24h) >= 0 ? "+" : ""}
+                {latestPrice.change24h}% 24h)
               </p>
             </div>
+
+
           </div>
 
           {/* 底部区域：合约地址和创建者地址 */}
@@ -252,7 +293,12 @@ export default function TokenPage() {
       <div className="hidden lg:flex lg:flex-row gap-6">
         {/* 左侧列 */}
         <div className="w-[calc(100%-480px)] space-y-6">
-          <ChartView token={token} />
+          <ChartView 
+            token={token} 
+            onPriceUpdate={handlePriceUpdate}
+            onHoverPriceChange={handleHoverPriceChange}
+            initialPrice={latestPrice}
+          />
           <ActivityTabs 
             token={token}
             activeTab={activeTab}
@@ -276,9 +322,12 @@ export default function TokenPage() {
             setTradeType={setTradeType}
             setTokenType={setTokenType}
             setAmount={setAmount}
-            handleQuickAmount={handleQuickAmount}
             handleReset={handleReset}
             setIsSlippageDialogOpen={setIsSlippageDialogOpen}
+            isWalletConnected={isWalletConnected}
+            onConnectWallet={handleConnectWallet}
+            aptBalance={aptBalance}
+            tokenBalance={tokenBalance}
           />
           <TokenInfo 
             token={{

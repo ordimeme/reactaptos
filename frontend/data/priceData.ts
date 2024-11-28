@@ -1,54 +1,81 @@
-import { UTCTimestamp } from 'lightweight-charts';
+import { CandlestickData, Time } from 'lightweight-charts';
 
-// 生成基于种子的随机数，确保同一个代币每次生成的数据都一样
-const seededRandom = (seed: string) => {
-  const hash = seed.split('').reduce((acc, char) => {
-    return ((acc << 5) - acc) + char.charCodeAt(0) | 0;
-  }, 0);
-  
-  let value = Math.abs(hash);
-  return () => {
-    value = (value * 16807) % 2147483647;
-    return (value - 1) / 2147483646;
-  };
-};
-
-// 生成K线数据
-export const getPriceData = (
-  symbol: string, 
+function generatePriceData(
   currentPrice: number,
-  timeStep: number = 60 * 60, // 默认1小时
-  count: number = 200 // 默认200个数据点
-) => {
-  const random = seededRandom(symbol);
-  const candleData = [];
-  let price = currentPrice;
+  timeStep: number,
+  count: number
+): CandlestickData<Time>[] {
+  const data: CandlestickData<Time>[] = [];
   const now = Math.floor(Date.now() / 1000);
-  const volatility = 0.02; // 2% 波动率
+  let basePrice = currentPrice * 0.8; // 从较低的价格开始
 
-  // 根据时间间隔调整波动率
-  const adjustedVolatility = volatility * Math.sqrt(timeStep / (60 * 60));
+  // 根据不同的时间区间调整价格波动范围
+  const getVolatilityRange = (timeStep: number) => {
+    switch (timeStep) {
+      case 5 * 60: // 5m
+        return { min: 0.05, max: 0.15 };
+      case 15 * 60: // 15m
+        return { min: 0.1, max: 0.2 };
+      case 60 * 60: // 1h
+        return { min: 0.15, max: 0.3 };
+      case 4 * 60 * 60: // 4h
+        return { min: 0.2, max: 0.4 };
+      case 24 * 60 * 60: // 1d
+        return { min: 0.3, max: 0.6 };
+      case 7 * 24 * 60 * 60: // 1w
+        return { min: 0.5, max: 1.0 };
+      default:
+        return { min: 0.15, max: 0.3 };
+    }
+  };
 
-  // 生成历史数据
-  for (let i = count; i >= 0; i--) {
-    const time = now - i * timeStep;
-    const change = (random() * 2 - 1) * adjustedVolatility;
-    const open = price;
-    price = price * (1 + change);
-    const close = price;
-    const high = Math.max(open, close) * (1 + random() * 0.005);
-    const low = Math.min(open, close) * (1 - random() * 0.005);
-    const volume = random() * 1000 * Math.abs(change) * 50;
+  const volatility = getVolatilityRange(timeStep);
+  let trend = 0.6; // 总体上涨趋势
 
-    candleData.push({
-      time: time as UTCTimestamp,
-      open: Number(open.toFixed(4)),
-      high: Number(high.toFixed(4)),
-      low: Number(low.toFixed(4)),
-      close: Number(close.toFixed(4)),
-      volume: Number(volume.toFixed(2))
+  // 生成历史数据，从当前时间往前推
+  for (let i = count - 1; i >= 0; i--) {
+    const time = now - (i * timeStep);
+    const volatilityPercent = (Math.random() * (volatility.max - volatility.min) + volatility.min) / 100;
+    
+    // 生成开盘价、最高价、最低价和收盘价
+    const open = basePrice;
+    // 使用趋势影响方向
+    const direction = Math.random() > (1 - trend) ? 1 : -1;
+    const change = basePrice * volatilityPercent * direction;
+    const close = basePrice + change;
+    
+    // 确保最高价和最低价合理
+    const high = Math.max(open, close) + Math.abs(change) * Math.random() * 0.3;
+    const low = Math.min(open, close) - Math.abs(change) * Math.random() * 0.3;
+
+    data.push({
+      time: time as Time,
+      open,
+      high,
+      low,
+      close,
     });
+
+    // 更新基准价格，并确保总体趋势向目标价格移动
+    basePrice = close;
+    if (i < count / 2) {
+      // 在后半段逐渐调整到目标价格
+      const targetDiff = currentPrice - basePrice;
+      basePrice += targetDiff / (i + 1);
+    }
+    
+    // 动态调整趋势
+    trend = Math.max(0.4, Math.min(0.8, trend + (Math.random() - 0.5) * 0.1));
   }
 
-  return candleData;
-}; 
+  return data;
+}
+
+export function getPriceData(
+  _symbol: string,
+  currentPrice: number,
+  timeStep: number,
+  count: number
+): CandlestickData<Time>[] {
+  return generatePriceData(currentPrice, timeStep, count);
+} 

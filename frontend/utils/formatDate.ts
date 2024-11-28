@@ -52,8 +52,8 @@ export function formatRelativeTime(timestamp: string | Date): string {
     return `${weeks}w`;
   } else if (months < 12) {
     return `${months}mo`;
-  } else if (years < 1) {
-    return `${months}mo`;
+  } else if (years === 1) {
+    return `1y`;
   } else {
     return formatDate(date);
   }
