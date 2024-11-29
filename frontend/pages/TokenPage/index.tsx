@@ -31,7 +31,12 @@ export default function TokenPage() {
   const { theme } = useContext(ThemeContext);
   const { id } = useParams();
   const token = marketData.find(item => item.id === id);
-  const { initializePrice, tokenPrices } = usePriceContext();
+  const { 
+    initializePrice, 
+    tokenPrices, 
+    marketCaps, // 添加 marketCaps
+    poolStates 
+  } = usePriceContext();
 
   // 确保在组件挂载时初始化价格
   useEffect(() => {
@@ -102,7 +107,7 @@ export default function TokenPage() {
     }
   };
 
-  // 在组件顶部添加price状态
+  // 在组件部添加price状态
   const [currentPrice, setCurrentPrice] = useState<PriceData>({
     open: formatPrice(token?.currentPrice || 0),
     high: formatPrice(token?.currentPrice || 0),
@@ -136,6 +141,9 @@ export default function TokenPage() {
     console.log('Price hover changed');
   }, []);
 
+  // 获取最新的市值数据
+  const currentMarketCap = marketCaps[token.id] || token.marketCap;
+  const currentPoolState = poolStates[token.id];
 
   // 渲染移动端内容
   const renderMobileContent = () => {
@@ -153,7 +161,9 @@ export default function TokenPage() {
             <TradeCard 
               token={{
                 ...token,
-                imageUrl: getSafeImageUrl(token.symbol)
+                imageUrl: getSafeImageUrl(token.symbol),
+                marketCap: currentMarketCap,
+                currentPrice: Number(currentPrice?.close || token.currentPrice)
               }}
               currentPrice={currentPrice}
               tradeType={tradeType}
@@ -179,7 +189,10 @@ export default function TokenPage() {
           <TokenInfo 
             token={{
               ...token,
-              imageUrl: getSafeImageUrl(token.symbol)
+              imageUrl: getSafeImageUrl(token.symbol),
+              marketCap: currentMarketCap,
+              currentPrice: Number(currentPrice?.close || token.currentPrice),
+              poolState: currentPoolState
             }} 
           />
         );
@@ -220,20 +233,23 @@ export default function TokenPage() {
                   {token.name}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">{token.symbol}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Market Cap: ${formatDisplayPrice(currentMarketCap)}
+                </p>
               </div>
             </div>
 
             {/* 右侧价格信息 */}
             <div className="text-right flex-shrink-0">
               <p className="text-lg sm:text-xl md:text-2xl font-bold">
-                ${formatDisplayPrice(currentPrice.close)}
+                ${formatDisplayPrice(currentPrice?.close || token.currentPrice)}
               </p>
               <div className="flex items-center justify-end gap-2">
                 <p className={`text-xs sm:text-sm ${
-                  parseFloat(currentPrice.change24h) >= 0 ? "text-green-500" : "text-red-500"
+                  parseFloat(currentPrice?.change24h || '0') >= 0 ? "text-green-500" : "text-red-500"
                 }`}>
-                  ({parseFloat(currentPrice.change24h) >= 0 ? "+" : ""}
-                  {currentPrice.change24h}% 24h)
+                  ({parseFloat(currentPrice?.change24h || '0') >= 0 ? "+" : ""}
+                  {currentPrice?.change24h || '0.00'}% 24h)
                 </p>
               </div>
             </div>
@@ -305,7 +321,9 @@ export default function TokenPage() {
           <TradeCard 
             token={{
               ...token,
-              imageUrl: getSafeImageUrl(token.symbol)
+              imageUrl: getSafeImageUrl(token.symbol),
+              marketCap: currentMarketCap,
+              currentPrice: Number(currentPrice?.close || token.currentPrice)
             }}
             currentPrice={currentPrice}
             tradeType={tradeType}
@@ -318,7 +336,10 @@ export default function TokenPage() {
           <TokenInfo 
             token={{
               ...token,
-              imageUrl: getSafeImageUrl(token.symbol)
+              imageUrl: getSafeImageUrl(token.symbol),
+              marketCap: currentMarketCap,
+              currentPrice: Number(currentPrice?.close || token.currentPrice),
+              poolState: currentPoolState
             }} 
           />
         </div>

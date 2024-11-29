@@ -16,6 +16,7 @@ interface PriceContextType {
   liquidity: Record<string, number>;
   volume24h: Record<string, number>;
   poolStates: Record<string, Pool>;
+  marketCaps: Record<string, number>;
 }
 
 const PriceContext = createContext<PriceContextType | undefined>(undefined);
@@ -27,6 +28,7 @@ export function PriceProvider({ children }: { children: React.ReactNode }) {
   const [liquidity, setLiquidity] = useState<Record<string, number>>({});
   const [volume24h, setVolume24h] = useState<Record<string, number>>({});
   const [poolStates, setPoolStates] = useState<Record<string, Pool>>({});
+  const [marketCaps, setMarketCaps] = useState<Record<string, number>>({});
 
   const simulatorsRef = useRef<Record<string, PriceSimulator>>({});
   const initializationRef = useRef(false);
@@ -48,20 +50,22 @@ export function PriceProvider({ children }: { children: React.ReactNode }) {
   const handlePriceUpdate = useCallback((tokenId: string) => (_: number, trade: Trade) => {
     const simulator = simulatorsRef.current[tokenId];
     if (!simulator) {
-      console.error('No simulator found for token:', tokenId);
+      console.log('No simulator found for token:', tokenId);
       return;
     }
 
     const poolState = simulator.getPoolState();
     const allTrades = simulator.getRecentTrades();
-
-    // 使用 chatData 中的函数生成价格数据
+    const candlesticks = simulator.getCandlestickData();
     const newPrice = generatePriceData(allTrades);
+    const marketCapUSD = simulator.calculateMarketCapUSD();
 
     console.log('Price update:', {
       tokenId,
       price: newPrice,
       trades: allTrades.length,
+      candlesticks: candlesticks.length,
+      marketCap: formatDisplayPrice(marketCapUSD),
       latestTrade: {
         type: trade.type,
         tokenAmount: formatDisplayPrice(trade.tokenAmount),
@@ -71,7 +75,6 @@ export function PriceProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // 更新所有状态
     updatePrice(newPrice, tokenId);
     updateTrades(allTrades, tokenId);
 
@@ -94,36 +97,37 @@ export function PriceProvider({ children }: { children: React.ReactNode }) {
       ...prev,
       [tokenId]: poolState
     }));
+
+    setMarketCaps(prev => ({
+      ...prev,
+      [tokenId]: marketCapUSD
+    }));
   }, [updatePrice, updateTrades]);
 
   const initializePrice = useCallback((token: MarketItem) => {
     if (!simulatorsRef.current[token.id]) {
       console.log('Initializing price simulator for token:', token.id);
       
-      // 创建新的模拟器实例
       const simulator = new PriceSimulator(token.currentPrice);
       simulatorsRef.current[token.id] = simulator;
       
-      // 先生成初始交易数据
       simulator.generateInitialTrades();
       const initialTrades = simulator.getRecentTrades();
-      
-      // 使用初始交易数据生成价格数据
       const initialPrice = generatePriceData(initialTrades);
+      const initialMarketCap = simulator.calculateMarketCapUSD();
 
       console.log('Token initialization:', {
         tokenId: token.id,
         tradesCount: initialTrades.length,
         initialPrice,
+        marketCap: formatDisplayPrice(initialMarketCap),
         firstTrade: initialTrades[0],
         lastTrade: initialTrades[initialTrades.length - 1]
       });
 
-      // 立即更新状态
       updateTrades(initialTrades, token.id);
       updatePrice(initialPrice, token.id);
 
-      // 更新其他状态
       const poolState = simulator.getPoolState();
       setBondingProgress(prev => ({
         ...prev,
@@ -145,13 +149,16 @@ export function PriceProvider({ children }: { children: React.ReactNode }) {
         [token.id]: poolState
       }));
 
-      // 添加监听器并开始实时更新
+      setMarketCaps(prev => ({
+        ...prev,
+        [token.id]: initialMarketCap
+      }));
+
       simulator.addListener(handlePriceUpdate(token.id));
       simulator.startRealTimeUpdates(5000);
     }
   }, [handlePriceUpdate, updatePrice, updateTrades]);
 
-  // 初始化所有代币
   useEffect(() => {
     if (!initializationRef.current) {
       console.log('Starting market data initialization');
@@ -184,7 +191,8 @@ export function PriceProvider({ children }: { children: React.ReactNode }) {
       bondingProgress,
       liquidity,
       volume24h,
-      poolStates
+      poolStates,
+      marketCaps
     }}>
       {children}
     </PriceContext.Provider>

@@ -14,7 +14,15 @@ import { MarketItem } from "@/types/market"
 import { formatDisplayPrice } from "@/utils/format"
 
 export default function MarketsPage() {
-  const { tokenPrices, tokenTrades, volume24h, liquidity, bondingProgress, initializePrice } = usePriceContext();
+  const { 
+    tokenPrices, 
+    tokenTrades, 
+    volume24h, 
+    liquidity, 
+    bondingProgress, 
+    marketCaps, 
+    initializePrice 
+  } = usePriceContext();
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("creation-time")
   const [filterBy, setFilterBy] = useState("all")
@@ -37,8 +45,20 @@ export default function MarketsPage() {
       priceChange24h: parseFloat(tokenPrices[token.id]?.change24h || '0'),
       volume24h: volume24h[token.id] || token.volume24h,
       liquidity: liquidity[token.id] || token.liquidity,
-      bondingProgress: bondingProgress[token.id] || token.bondingProgress
+      bondingProgress: bondingProgress[token.id] || token.bondingProgress,
+      marketCap: marketCaps[token.id] || token.marketCap
     }));
+
+    console.log('Updated market data:', {
+      totalTokens: updatedData.length,
+      sampleToken: {
+        id: updatedData[0]?.id,
+        price: formatDisplayPrice(updatedData[0]?.currentPrice),
+        marketCap: formatDisplayPrice(updatedData[0]?.marketCap),
+        liquidity: formatDisplayPrice(updatedData[0]?.liquidity)
+      },
+      marketCaps
+    });
 
     const sortedData = getFilteredAndSortedData(
       updatedData,
@@ -56,7 +76,8 @@ export default function MarketsPage() {
     tokenTrades, 
     volume24h, 
     liquidity, 
-    bondingProgress
+    bondingProgress,
+    marketCaps
   ]);
 
   // 获取实时的 Top Gainer 和 Top Volume，并确保有默认值

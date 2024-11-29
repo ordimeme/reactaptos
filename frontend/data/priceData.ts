@@ -47,104 +47,179 @@ class BondingCurve {
 
 // 价格模拟器
 export class PriceSimulator extends BondingCurve {
-  private pool: Pool;
   private trades: Trade[] = [];
-  private listeners: ((price: number, trade: Trade) => void)[] = [];
+  private listeners: Array<(timestamp: number, trade: Trade) => void> = [];
   private intervalId?: NodeJS.Timeout;
+  private pool: Pool;
   private candlesticks: CandlestickData[] = [];
   private currentCandle: CandlestickData;
 
   constructor(initialPrice: number) {
     super(initialPrice);
-    
-    // 初始化资金池
-    this.pool = {
-      tokenReserve: this.maxSupply * 0.8,  // 初始预留 80%
-      aptReserve: initialPrice * this.maxSupply * 0.2, // 初始 APT 储备
+    this.pool = this.initializePool();
+    this.currentCandle = this.createInitialCandle();
+  }
+
+  private initializePool(): Pool {
+    const initialLiquidity = this.initialPrice * this.maxSupply * 0.1; // 初始流动性为最大市值的10%
+    return {
+      tokenReserve: this.maxSupply,
+      aptReserve: initialLiquidity / this.initialPrice,
       totalSupply: this.maxSupply,
-      currentSupply: this.maxSupply * 0.2,  // 初始流通 20%
-      currentPrice: initialPrice,
+      currentSupply: 0,
+      currentPrice: this.initialPrice,
       volume24h: 0,
-      liquidity: initialPrice * this.maxSupply * 0.4  // 初始流动性
+      liquidity: initialLiquidity
+    };
+  }
+
+  private createInitialCandle(): CandlestickData {
+    const now = Math.floor(Date.now() / 1000);
+    return {
+      time: now as Time,
+      open: this.initialPrice,
+      high: this.initialPrice,
+      low: this.initialPrice,
+      close: this.initialPrice
+    };
+  }
+
+  // 生成新的交易数据
+  public generateNewTrade(): Trade {
+    const isBuy = Math.random() > 0.4;
+    const maxTradeAmount = Math.max(
+      this.pool.currentSupply * 0.01,
+      this.maxSupply * 0.001
+    ); // 确保即使currentSupply为0也有合理的交易量
+    const baseAmount = maxTradeAmount * (0.1 + Math.random() * 0.9);
+    const amount = Math.floor(baseAmount);
+    
+    const { price, slippage } = isBuy 
+      ? this.calculateBuyPrice(amount)
+      : this.calculateSellPrice(amount);
+    
+    const volume = price * amount;
+    const usdPrice = this.calculateUSDPrice(price);
+    
+    const trade: Trade = {
+      trader: `0x${Math.random().toString(36).substr(2, 40)}`,
+      type: isBuy ? 'buy' : 'sell',
+      aptAmount: isBuy ? volume : -volume,
+      tokenAmount: amount,
+      timestamp: new Date().toISOString(),
+      txHash: `0x${Math.random().toString(36).substr(2, 64)}`,
+      price,
+      priceUSD: usdPrice,
+      slippage,
+      volume,
+      volumeUSD: volume * APT_PRICE_USD
     };
 
-    // 初始化K线
+    // 更新池状态
+    if (isBuy) {
+      this.pool.aptReserve += volume;
+      this.pool.tokenReserve -= amount;
+      this.pool.currentSupply += amount;
+    } else {
+      this.pool.aptReserve -= volume;
+      this.pool.tokenReserve += amount;
+      this.pool.currentSupply = Math.max(0, this.pool.currentSupply - amount);
+    }
+    
+    // 更新价格和流动性
+    this.pool.currentPrice = this.calculatePrice(this.pool.currentSupply);
+    this.updateLiquidity(volume, isBuy);
+    
+    // 更新24小时交易量
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    this.trades = this.trades.filter(t => new Date(t.timestamp).getTime() > oneDayAgo);
+    this.pool.volume24h = this.trades.reduce((sum, t) => sum + Math.abs(t.volume), 0);
+    
+    // 添加新交易并保持最近1000条记录
+    this.trades.push(trade);
+    if (this.trades.length > 1000) {
+      this.trades.shift();
+    }
+
+    // 更新K线数据
+    this.updateCandlestick(trade);
+
+    // 通知所有监听器
+    const timestamp = Date.now();
+    this.listeners.forEach(listener => listener(timestamp, trade));
+
+    return trade;
+  }
+
+  // 开始实时更新
+  public startRealTimeUpdates(interval: number = 5000) {
+    console.log('Starting real-time updates for simulator');
+    
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+
+    // 确保有初始交易数据
+    if (this.trades.length === 0) {
+      this.generateInitialTrades();
+    }
+
+    // 立即生成一次交易
+    const trade = this.generateNewTrade();
+    this.notifyListeners(trade.price, trade);
+
+    this.intervalId = setInterval(() => {
+      const trade = this.generateNewTrade();
+      console.log('Generated new trade:', {
+        type: trade.type,
+        tokenAmount: formatDisplayPrice(trade.tokenAmount),
+        aptAmount: formatDisplayPrice(Math.abs(trade.aptAmount)),
+        price: formatDisplayPrice(trade.price),
+        timestamp: trade.timestamp
+      });
+      this.notifyListeners(trade.price, trade);
+    }, interval);
+  }
+
+  // 停止实时更新
+  public stopRealTimeUpdates() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = undefined;
+    }
+  }
+
+  // 更新K线数据
+  private updateCandlestick(trade: Trade) {
     const now = Math.floor(Date.now() / 1000);
-    this.currentCandle = {
-      time: now as Time,
-      open: initialPrice,
-      high: initialPrice,
-      low: initialPrice,
-      close: initialPrice
-    };
+    const currentTime = Math.floor(now / 60) * 60; // 对齐到分钟
+    
+    if (!this.currentCandle || currentTime > Number(this.currentCandle.time)) {
+      if (this.currentCandle) {
+        this.candlesticks.push(this.currentCandle);
+      }
+      this.currentCandle = {
+        time: currentTime as Time,
+        open: trade.price,
+        high: trade.price,
+        low: trade.price,
+        close: trade.price
+      };
+    } else {
+      this.currentCandle.high = Math.max(this.currentCandle.high, trade.price);
+      this.currentCandle.low = Math.min(this.currentCandle.low, trade.price);
+      this.currentCandle.close = trade.price;
+    }
+
+    // 保持最近1000根K线
+    if (this.candlesticks.length > 1000) {
+      this.candlesticks = this.candlesticks.slice(-1000);
+    }
   }
 
   // 添加 USD 价格计算方法
   private calculateUSDPrice(aptPrice: number): number {
     return aptPrice * APT_PRICE_USD;
-  }
-
-  // 修改生成随机交易的方法
-  private generateRandomTrade(): { price: number; trade: Trade } {
-    const isBuy = Math.random() > 0.4;
-    
-    // 生成合理的代币交易量
-    const maxTradeAmount = this.pool.currentSupply * 0.01;
-    const baseAmount = maxTradeAmount * (0.1 + Math.random() * 0.9);
-    const tokenAmount = Math.floor(baseAmount);
-    
-    // 计算 APT 价格和滑点
-    const { price: aptPrice, slippage } = isBuy 
-      ? this.calculateBuyPrice(tokenAmount)
-      : this.calculateSellPrice(tokenAmount);
-    
-    // 计算 USD 价格
-    const usdPrice = this.calculateUSDPrice(aptPrice);
-    
-    // 计算交易量
-    const aptAmount = aptPrice * tokenAmount;
-    const usdAmount = usdPrice * tokenAmount;
-
-    // 更新池子状态
-    if (isBuy) {
-      this.pool.tokenReserve -= tokenAmount;
-      this.pool.aptReserve += aptAmount;
-      this.pool.currentSupply += tokenAmount;
-    } else {
-      this.pool.tokenReserve += tokenAmount;
-      this.pool.aptReserve -= aptAmount;
-      this.pool.currentSupply -= tokenAmount;
-    }
-
-    this.pool.currentPrice = aptPrice;
-    this.pool.volume24h += aptAmount;
-    this.updateLiquidity(aptAmount, isBuy);
-
-    // 生成交易记录
-    const trade: Trade = {
-      timestamp: new Date().toISOString(),
-      aptAmount: isBuy ? aptAmount : -aptAmount,
-      tokenAmount: tokenAmount,
-      type: isBuy ? 'buy' : 'sell',
-      txHash: `0x${Math.random().toString(36).substr(2, 64)}`,
-      trader: `0x${Math.random().toString(36).substr(2, 40)}`,
-      price: aptPrice,
-      priceUSD: usdPrice,
-      slippage: slippage,
-      volume: aptAmount,
-      volumeUSD: usdAmount
-    };
-
-    console.log('Generated trade:', {
-      type: trade.type,
-      tokenAmount: formatDisplayPrice(trade.tokenAmount),
-      aptAmount: formatDisplayPrice(Math.abs(trade.aptAmount)),
-      aptPrice: formatDisplayPrice(trade.price),
-      usdPrice: formatDisplayPrice(trade.priceUSD),
-      marketCapUSD: formatDisplayPrice(this.calculateMarketCapUSD())
-    });
-
-    return { price: aptPrice, trade };
   }
 
   // 优化买入价格计算
@@ -251,9 +326,24 @@ export class PriceSimulator extends BondingCurve {
 
   // 更新流动性
   private updateLiquidity(volume: number, isBuy: boolean) {
-    // 流动性随交易变化
+    // 流动性 = APT储备 * 2（假设APT和代币的价值相等）
     const impact = this.calculateLiquidityImpact(this.pool.volume24h, this.pool.liquidity);
-    this.pool.liquidity += isBuy ? volume * (1 - impact) : -volume * impact;
+    const liquidityChange = volume * (1 - impact);
+    
+    if (isBuy) {
+      // 买入时增加流动性
+      this.pool.liquidity += liquidityChange;
+    } else {
+      // 卖出时减少流动性，但确保不会低于初始流动性的10%
+      const minLiquidity = this.initialPrice * this.maxSupply * 0.01;
+      this.pool.liquidity = Math.max(
+        minLiquidity,
+        this.pool.liquidity - liquidityChange
+      );
+    }
+
+    // 更新APT储备
+    this.pool.aptReserve = this.pool.liquidity / (2 * this.pool.currentPrice);
   }
 
   // 记录交易并更新K线
@@ -262,7 +352,7 @@ export class PriceSimulator extends BondingCurve {
     
     const now = Math.floor(Date.now() / 1000);
     
-    // 如果是新的时间周期，创建新的K
+    // 如果是新的时间周期，创新的K
     if (now - Number(this.currentCandle.time) >= 60) {
       this.candlesticks.push(this.currentCandle);
       this.currentCandle = {
@@ -290,13 +380,13 @@ export class PriceSimulator extends BondingCurve {
     const data: CandlestickData[] = [];
 
     for (let time = startTime; time <= endTime; time += timeStep) {
-      const result = this.generateRandomTrade();
+      const trade = this.generateNewTrade();
       data.push({
         time: time as Time,
-        open: result.price,
-        high: result.price * 1.001,
-        low: result.price * 0.999,
-        close: result.price
+        open: trade.price,
+        high: trade.price * 1.001,
+        low: trade.price * 0.999,
+        close: trade.price
       });
     }
 
@@ -307,73 +397,75 @@ export class PriceSimulator extends BondingCurve {
   public generateInitialTrades() {
     console.log('Generating initial trades');
     const now = Date.now();
-    const count = 50; // 初始交易数量
+    const count = 50;
 
     // 清空现有交易
     this.trades = [];
 
-    for (let i = 0; i < count; i++) {
-      const timestamp = new Date(now - (count - i) * 60000);
-      const result = this.generateRandomTrade();
-      
-      // 修改交易时间戳
-      const updatedTrade: Trade = {
-        ...result.trade,
-        timestamp: timestamp.toISOString()
-      };
+    // 生成初始买入交易以建立市值
+    const initialBuyAmount = this.maxSupply * 0.1; // 初始买入10%的供应量
+    const { price: initialPrice, slippage: initialSlippage } = this.calculateBuyPrice(initialBuyAmount);
+    const initialVolume = initialPrice * initialBuyAmount;
 
-      // 添加到交易列表
-      this.trades.push(updatedTrade);
+    // 记录初始买入交易
+    const initialTrade: Trade = {
+      trader: `0x${Math.random().toString(36).substr(2, 40)}`,
+      type: 'buy',
+      aptAmount: initialVolume,
+      tokenAmount: initialBuyAmount,
+      timestamp: new Date(now - count * 60000).toISOString(),
+      txHash: `0x${Math.random().toString(36).substr(2, 64)}`,
+      price: initialPrice,
+      priceUSD: initialPrice * APT_PRICE_USD,
+      slippage: initialSlippage,
+      volume: initialVolume,
+      volumeUSD: initialVolume * APT_PRICE_USD
+    };
+
+    // 更新池状态
+    this.pool.aptReserve += initialVolume;
+    this.pool.tokenReserve -= initialBuyAmount;
+    this.pool.currentSupply += initialBuyAmount;
+    this.pool.currentPrice = this.calculatePrice(this.pool.currentSupply);
+    this.updateLiquidity(initialVolume, true);
+
+    this.trades.push(initialTrade);
+
+    // 生成后续交易
+    for (let i = 1; i < count; i++) {
+      const timestamp = new Date(now - (count - i) * 60000);
+      const trade = this.generateNewTrade();
+      trade.timestamp = timestamp.toISOString();
+      this.trades.push(trade);
     }
 
     // 按时间排序
     this.trades.sort((a, b) => 
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
 
+    const marketCapUSD = this.calculateMarketCapUSD();
     console.log('Initial trades generated:', {
       count: this.trades.length,
-      firstTrade: this.trades[0],
-      lastTrade: this.trades[this.trades.length - 1]
+      firstTrade: {
+        type: this.trades[0].type,
+        tokenAmount: formatDisplayPrice(this.trades[0].tokenAmount),
+        price: formatDisplayPrice(this.trades[0].price),
+        timestamp: this.trades[0].timestamp
+      },
+      lastTrade: {
+        type: this.trades[this.trades.length - 1].type,
+        tokenAmount: formatDisplayPrice(this.trades[this.trades.length - 1].tokenAmount),
+        price: formatDisplayPrice(this.trades[this.trades.length - 1].price),
+        timestamp: this.trades[this.trades.length - 1].timestamp
+      },
+      poolState: {
+        currentSupply: formatDisplayPrice(this.pool.currentSupply),
+        currentPrice: formatDisplayPrice(this.pool.currentPrice),
+        liquidity: formatDisplayPrice(this.pool.liquidity),
+        marketCapUSD: formatDisplayPrice(marketCapUSD)
+      }
     });
-  }
-
-  // 修改 startRealTimeUpdates 方法
-  public startRealTimeUpdates(interval: number = 5000) {
-    console.log('Starting real-time updates for simulator');
-    
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-    }
-
-    // 确保有初始交易数据
-    if (this.trades.length === 0) {
-      this.generateInitialTrades();
-    }
-
-    // 立即生成一次交易
-    const initialTrade = this.generateRandomTrade();
-    this.notifyListeners(initialTrade.price, initialTrade.trade);
-
-    this.intervalId = setInterval(() => {
-      const { price, trade } = this.generateRandomTrade();
-      console.log('Generated new trade:', {
-        type: trade.type,
-        tokenAmount: formatDisplayPrice(trade.tokenAmount),
-        aptAmount: formatDisplayPrice(Math.abs(trade.aptAmount)),
-        price: formatDisplayPrice(trade.price),
-        timestamp: trade.timestamp
-      });
-      this.notifyListeners(price, trade);
-    }, interval);
-  }
-
-  // 停止实时更新
-  public stopRealTimeUpdates() {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = undefined;
-    }
   }
 
   private notifyListeners(price: number, trade: Trade) {
@@ -443,15 +535,39 @@ export class PriceSimulator extends BondingCurve {
     return this.pool.liquidity;
   }
 
-  // 添加市值计算方法
+  // 计算市值
   public calculateMarketCapUSD(): number {
-    const aptMarketCap = this.pool.currentPrice * this.pool.currentSupply;
-    return this.calculateUSDPrice(aptMarketCap);
+    const marketCapAPT = this.pool.currentSupply * this.pool.currentPrice;
+    const marketCapUSD = marketCapAPT * APT_PRICE_USD;
+    
+    console.log('Market Cap calculation:', {
+      currentSupply: formatDisplayPrice(this.pool.currentSupply),
+      currentPrice: formatDisplayPrice(this.pool.currentPrice),
+      marketCapAPT: formatDisplayPrice(marketCapAPT),
+      marketCapUSD: formatDisplayPrice(marketCapUSD),
+      aptPriceUSD: APT_PRICE_USD
+    });
+
+    if (marketCapUSD === 0) {
+      console.warn('Market cap is zero! Check pool state:', {
+        currentSupply: this.pool.currentSupply,
+        currentPrice: this.pool.currentPrice,
+        totalSupply: this.maxSupply,
+        initialPrice: this.initialPrice
+      });
+    }
+    
+    return marketCapUSD;
   }
 
   // 获取当前 USD 价格
   public getCurrentPriceUSD(): number {
     return this.calculateUSDPrice(this.pool.currentPrice);
+  }
+
+  // 获取K线数据
+  public getCandlestickData(): CandlestickData[] {
+    return [...this.candlesticks, this.currentCandle].filter(Boolean);
   }
 }
 
