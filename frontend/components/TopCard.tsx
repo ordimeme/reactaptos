@@ -13,6 +13,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { usePriceContext } from "@/context/PriceContext";
+import { formatLiquidity } from "@/utils/format"
+import { format } from "@/utils/format"
 
 interface TopCardProps {
   title: string
@@ -172,21 +174,24 @@ const TopCard = ({ title, item }: TopCardProps) => {
                 </div>
                 <div className="text-right shrink-0">
                   <div className="flex items-center justify-end gap-2 mb-2">
-                    <div className="font-semibold text-lg md:text-xl">
-                      ${item.marketCap.toLocaleString()}
+                    <div className="font-semibold text-lg md:text-xl group/price">
+                      <span className="block group-hover/price:hidden">
+                        {format.marketCap(item.marketCap)}
+                      </span>
+                      <span className="hidden group-hover/price:block">
+                        {format.aptMarketCap(item.marketCap)} APT
+                      </span>
                     </div>
-                    {title === "Top Gainer" && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Market Cap</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Market Cap</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                   <div className={`text-sm font-medium ${
                     parseFloat(currentPrice.change24h) >= 0 ? 'text-green-500' : 'text-red-500'
@@ -197,15 +202,15 @@ const TopCard = ({ title, item }: TopCardProps) => {
                 </div>
               </div>
 
-              {/* 价格和进度 */}
+              {/* 流动性和进度 */}
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground/70">Price:</span>
-                  <span>${item.currentPrice.toFixed(2)}</span>
+                  <span className="text-muted-foreground/70">Liquidity:</span>
+                  <span>{formatLiquidity(item.liquidity)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <ProgressRing progress={item.bondingProgress} />
-                  <span>{item.bondingProgress}%</span>
+                  <span>{format.percentage(item.bondingProgress)}</span>
                 </div>
               </div>
             </div>

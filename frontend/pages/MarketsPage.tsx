@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { marketData } from "@/data/marketData"
 import CardList from "@/components/CardList"
 import TopCard from "@/components/TopCard"
@@ -11,59 +11,14 @@ import {
 } from "@/utils/calculations"
 import { usePriceContext } from "@/context/PriceContext"
 import { MarketItem } from "@/types/market"
+import { formatDisplayPrice } from "@/utils/format"
 
 export default function MarketsPage() {
-  const { tokenPrices, initializePrice } = usePriceContext();
+  const { tokenPrices, tokenTrades, volume24h, liquidity, bondingProgress, initializePrice } = usePriceContext();
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("creation-time")
   const [filterBy, setFilterBy] = useState("all")
-  const [filteredData, setFilteredData] = useState(marketData)
-  
-  // 滑动相关状态
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-
-  // 处理触摸开始
-  const handleTouchStart = (e: TouchEvent) => {
-    setIsDragging(true);
-    setStartX(e.touches[0].pageX - (scrollContainerRef.current?.offsetLeft || 0));
-    setScrollLeft(scrollContainerRef.current?.scrollLeft || 0);
-  };
-
-  // 处理触摸移动
-  const handleTouchMove = (e: TouchEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    
-    const x = e.touches[0].pageX - (scrollContainerRef.current?.offsetLeft || 0);
-    const walk = (x - startX) * 2;
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollLeft = scrollLeft - walk;
-    }
-  };
-
-  // 处理触摸结束
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
-  // 添加触摸事件监听
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (container) {
-      container.addEventListener('touchstart', handleTouchStart);
-      container.addEventListener('touchmove', handleTouchMove);
-      container.addEventListener('touchend', handleTouchEnd);
-
-      return () => {
-        container.removeEventListener('touchstart', handleTouchStart);
-        container.removeEventListener('touchmove', handleTouchMove);
-        container.removeEventListener('touchend', handleTouchEnd);
-      };
-    }
-  }, [isDragging, startX, scrollLeft]);
+  const [filteredData, setFilteredData] = useState<MarketItem[]>([])
 
   // 初始化所有代币的价格
   useEffect(() => {
@@ -73,78 +28,96 @@ export default function MarketsPage() {
     });
   }, [initializePrice]);
 
-  // 监听价格更新
-  useEffect(() => {
-    console.log('Token prices updated:', tokenPrices);
-  }, [tokenPrices]);
-
   // 更新过滤后的数据
   useEffect(() => {
+    const updatedData = marketData.map(token => ({
+      ...token,
+      trades: tokenTrades[token.id] || token.trades,
+      currentPrice: parseFloat(tokenPrices[token.id]?.close || formatDisplayPrice(token.currentPrice)),
+      priceChange24h: parseFloat(tokenPrices[token.id]?.change24h || '0'),
+      volume24h: volume24h[token.id] || token.volume24h,
+      liquidity: liquidity[token.id] || token.liquidity,
+      bondingProgress: bondingProgress[token.id] || token.bondingProgress
+    }));
+
     const sortedData = getFilteredAndSortedData(
-      marketData.map(token => ({
-        ...token,
-        currentPrice: parseFloat(tokenPrices[token.id]?.close || token.currentPrice.toString()),
-        priceChange24h: parseFloat(tokenPrices[token.id]?.change24h || '0')
-      })) as MarketItem[],
+      updatedData,
       searchTerm,
       filterBy,
       sortBy
     );
+
     setFilteredData(sortedData);
-  }, [searchTerm, sortBy, filterBy, tokenPrices]);
+  }, [
+    searchTerm, 
+    sortBy, 
+    filterBy, 
+    tokenPrices, 
+    tokenTrades, 
+    volume24h, 
+    liquidity, 
+    bondingProgress
+  ]);
+
+  // 获取实时的 Top Gainer 和 Top Volume，并确保有默认值
+  const topGainer = getTopGainer(filteredData) || marketData[0];
+  const topVolume = getTopVolume(filteredData) || marketData[0];
+
+  // 如果数据还未加载完成，显示加载状态
+  if (filteredData.length === 0) {
+    return (
+      <div className="max-w-[1400px] mx-auto px-4 py-8">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 py-8">
       {/* Activity Scroll */}
       <div className="mb-8">
-        <ActivityScroll speed={30} updateInterval={5000} initialCount={10} />
+        <ActivityScroll 
+          trades={Object.values(tokenTrades).flat()}
+          speed={30} 
+          initialCount={10} 
+        />
       </div>
 
-      {/* Top Cards - 添加滑动容器 */}
+      {/* Top Cards */}
       <div className="overflow-hidden mb-8">
-        <div 
-          ref={scrollContainerRef}
-          className="flex md:justify-center gap-4 overflow-x-auto scrollbar-hide px-4 md:px-0 -mx-4 md:mx-0"
-          style={{
-            scrollBehavior: 'smooth',
-            WebkitOverflowScrolling: 'touch',
-            scrollSnapType: 'x mandatory'
-          }}
-        >
-          <div className="flex-none w-[85%] md:w-auto scroll-snap-align-start">
+        <div className="flex md:justify-center gap-4 overflow-x-auto scrollbar-hide px-4 md:px-0 -mx-4 md:mx-0">
+          <div className="flex-none w-[85%] md:w-auto">
             <TopCard 
               title="Top Gainer" 
-              item={getTopGainer(marketData)}
-              price={tokenPrices[getTopGainer(marketData).id]}
+              item={topGainer}
+              price={tokenPrices[topGainer.id]}
             />
           </div>
-          <div className="flex-none w-[85%] md:w-auto scroll-snap-align-start">
+          <div className="flex-none w-[85%] md:w-auto">
             <TopCard 
               title="Top Volume" 
-              item={getTopVolume(marketData)}
-              price={tokenPrices[getTopVolume(marketData).id]}
+              item={topVolume}
+              price={tokenPrices[topVolume.id]}
             />
           </div>
         </div>
       </div>
 
       {/* 搜索、排序和筛选 */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl py-4 -mx-4 px-4">
-        <SortAndSearch
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          filterBy={filterBy}
-          setFilterBy={setFilterBy}
-        />
-      </div>
+      <SortAndSearch
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        filterBy={filterBy}
+        setFilterBy={setFilterBy}
+      />
 
-      {/* 所有代币列表 */}
+      {/* 代币列表 */}
       <CardList 
         initialData={filteredData} 
         tokenPrices={tokenPrices}
       />
     </div>
-  );
+  )
 }

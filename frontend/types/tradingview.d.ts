@@ -20,15 +20,24 @@ declare module 'lightweight-charts' {
       };
       textColor?: string;
       fontSize?: number;
+      fontFamily?: string;
+      padding?: {
+        left?: number;
+        right?: number;
+        top?: number;
+        bottom?: number;
+      };
     };
     grid?: {
       vertLines?: {
         color?: string;
         style?: number;
+        visible?: boolean;
       };
       horzLines?: {
         color?: string;
         style?: number;
+        visible?: boolean;
       };
     };
     timeScale?: {
@@ -38,6 +47,10 @@ declare module 'lightweight-charts' {
       tickMarkFormatter?: (time: number) => string;
       fixLeftEdge?: boolean;
       fixRightEdge?: boolean;
+      rightOffset?: number;
+      leftOffset?: number;
+      barSpacing?: number;
+      minBarSpacing?: number;
     };
     rightPriceScale?: PriceScaleOptions;
     crosshair?: CrosshairOptions;
@@ -58,6 +71,7 @@ declare module 'lightweight-charts' {
     borderColor?: string;
     visible?: boolean;
     entireTextOnly?: boolean;
+    ticksVisible?: boolean;
     format?: {
       type: 'price' | 'custom';
       precision: number;
@@ -106,6 +120,7 @@ declare module 'lightweight-charts' {
       precision: number;
       minMove: number;
     };
+    priceScaleId?: string;
   }
 
   export enum ColorType {

@@ -9,6 +9,8 @@ import { truncateAddress, getFullAddress } from "@/utils/truncateAddress";
 import { Pagination } from "@/components/Pagination";
 import { useToast } from "@/components/ui/use-toast";
 import { Tag } from "@/components/ui/tag";
+import { format } from "@/utils/format";
+import { usePriceContext } from "@/context/PriceContext";
 
 interface TokenInfoProps {
   token: MarketItem & { imageUrl: string };
@@ -27,6 +29,7 @@ export function TokenInfo({ token }: TokenInfoProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const { liquidity } = usePriceContext();
 
   // 生成并排序 holders 数据
   const holders: Holder[] = useMemo(() => {
@@ -90,6 +93,9 @@ export function TokenInfo({ token }: TokenInfoProps) {
       });
     }
   };
+
+  // 获取最新流动性
+  const aptLiquidity = liquidity[token.id] || token.liquidity;
 
   // Holder Distribution 表格渲染函数
   const renderHolderDistribution = () => (
@@ -168,8 +174,13 @@ export function TokenInfo({ token }: TokenInfoProps) {
           <div className="text-center mb-1">
             <span className="text-xs text-muted-foreground">Market Cap</span>
           </div>
-          <div className="font-semibold text-center">
-            <span className="text-base sm:text-lg">${token.marketCap.toLocaleString()}</span>
+          <div className="font-semibold text-center group/price">
+            <span className="text-base sm:text-lg block group-hover/price:hidden">
+              ${format.marketCap(token.marketCap)}
+            </span>
+            <span className="text-base sm:text-lg hidden group-hover/price:block">
+              {format.aptMarketCap(token.marketCap)} APT
+            </span>
           </div>
         </div>
 
@@ -179,7 +190,9 @@ export function TokenInfo({ token }: TokenInfoProps) {
             <span className="text-xs text-muted-foreground">Liquidity</span>
           </div>
           <div className="font-semibold text-center">
-            <span className="text-base sm:text-lg">${token.liquidity?.toLocaleString() ?? '0'}</span>
+            <span className="text-base sm:text-lg">
+              {format.liquidity(aptLiquidity)}
+            </span>
           </div>
         </div>
       </div>
@@ -253,7 +266,7 @@ export function TokenInfo({ token }: TokenInfoProps) {
         <div>
           <div className="flex justify-between mb-2">
             <span className="text-sm text-muted-foreground">
-              Bonding Curve Progress: {token.bondingProgress}%
+              Bonding Curve Progress: {format.percentage(token.bondingProgress)}
             </span>
             <Button 
               variant="ghost" 
@@ -268,14 +281,14 @@ export function TokenInfo({ token }: TokenInfoProps) {
             className="h-2 bg-muted/20" 
           />
           <p className="text-sm text-muted-foreground mt-1">
-            Graduate This Coin To Raydium At ${token.marketCap.toLocaleString()} Market Cap
+            Graduate This Coin To Raydium At {format.marketCap(token.marketCap)} Market Cap
           </p>
         </div>
 
         <div>
           <div className="flex justify-between mb-2">
             <span className="text-sm text-muted-foreground">
-              King Of The Hill Progress: {token.kingProgress ?? 0}%
+              King Of The Hill Progress: {format.percentage(token.kingProgress ?? 0)}
             </span>
             <Button 
               variant="ghost" 
@@ -290,7 +303,7 @@ export function TokenInfo({ token }: TokenInfoProps) {
             className="h-2 bg-muted/20"
           />
           <p className="text-sm text-muted-foreground mt-1">
-            Dethrone The Current King At ${token.dethroneCap?.toLocaleString() ?? '0'} Market Cap
+            Dethrone The Current King At {format.marketCap(token.dethroneCap ?? 0)} Market Cap
           </p>
         </div>
       </div>

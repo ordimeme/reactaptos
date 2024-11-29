@@ -1,4 +1,4 @@
-import { MarketItem } from "@/types/market";
+import { MarketItem, Trade } from "@/types/market";
 import { PriceSimulator } from "./priceData";
 
 // 初始化 Bonding Curve
@@ -17,10 +17,11 @@ export const dgldData: MarketItem = {
   // 价格相关
   initialPrice: bondingCurve.getCurrentPrice(),
   currentPrice: bondingCurve.getCurrentPrice(),
+  currentPriceUSD: bondingCurve.getCurrentPriceUSD(),
   priceChange24h: 5.2,
   
   // 市场相关
-  marketCap: bondingCurve.getCurrentPrice() * bondingCurve.getPoolState().currentSupply,
+  marketCap: bondingCurve.calculateMarketCapUSD(),
   bondingProgress: (bondingCurve.getPoolState().currentSupply / bondingCurve.getPoolState().totalSupply) * 100,
   liquidity: bondingCurve.getPoolState().aptReserve * 2,
   volume24h: 1234567.89,
@@ -32,7 +33,7 @@ export const dgldData: MarketItem = {
   
   // King of the Hill
   kingProgress: 45,
-  dethroneCap: bondingCurve.getCurrentPrice() * bondingCurve.getPoolState().currentSupply * 2,
+  dethroneCap: bondingCurve.calculateMarketCapUSD() * 2,
   
   // 生成模拟交易数据
   trades: Array.from({ length: 20 }, () => {
@@ -42,19 +43,25 @@ export const dgldData: MarketItem = {
       ? bondingCurve.calculateBuyPrice(amount)
       : bondingCurve.calculateSellPrice(amount);
     const volume = price * amount;
+    const usdPrice = price * 12; // 1 APT = $12
+    const usdVolume = volume * 12;
     
-    return {
+    const trade: Trade = {
       trader: `0x${Math.random().toString(36).substr(2, 40)}`,
-      type: isBuy ? "buy" : "sell" as const,
-      aptAmount: amount * price,
+      type: isBuy ? 'buy' as const : 'sell' as const,
+      aptAmount: isBuy ? volume : -volume,
       tokenAmount: amount,
       timestamp: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
       txHash: `0x${Math.random().toString(36).substr(2, 64)}`,
       price,
+      priceUSD: usdPrice,
       slippage,
-      volume
+      volume,
+      volumeUSD: usdVolume
     };
-  }),
+
+    return trade;
+  }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
 
   // 生成模拟评论数据
   comments: Array.from({ length: 10 }, () => ({

@@ -20,8 +20,10 @@ export interface Trade {
   txHash: string;
   trader: string;
   price: number;
+  priceUSD: number;
   slippage: number;
-  volume?: number;
+  volume: number;
+  volumeUSD: number;
 }
 
 export interface Comment {
@@ -54,20 +56,21 @@ export interface MarketItem {
   symbol: string;
   contractAddress: string;
   creator: string;
-  description?: string;
-  imageUrl?: string;
+  description: string;
+  imageUrl: string;
   initialPrice: number;
   currentPrice: number;
+  currentPriceUSD: number;
   priceChange24h: number;
   marketCap: number;
   bondingProgress: number;
   liquidity: number;
   volume24h: number;
-  twitter?: string;
-  discord?: string;
-  telegram?: string;
-  kingProgress?: number;
-  dethroneCap?: number;
+  twitter: string;
+  discord: string;
+  telegram: string;
+  kingProgress: number;
+  dethroneCap: number;
   trades: Trade[];
   comments: Comment[];
   holders: Holder[];

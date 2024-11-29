@@ -3,6 +3,7 @@ import { MarketItem } from "@/types/market";
 import { TradesView } from "./TradesView";
 import { Comments } from "./Comments";
 import { MessageCircle, BarChart2 } from "lucide-react";
+import { usePriceContext } from "@/context/PriceContext";
 
 interface ActivityTabsProps {
   token: MarketItem;
@@ -21,6 +22,9 @@ export function ActivityTabs({
   setCommentContent,
   handleSubmitComment,
 }: ActivityTabsProps) {
+  const { tokenTrades } = usePriceContext();
+  const trades = tokenTrades[token.id] || [];
+
   return (
     <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "comments" | "trades")}>
       <TabsList className="grid w-full grid-cols-2">
@@ -35,7 +39,7 @@ export function ActivityTabs({
           Trades
           <div className="flex items-center gap-1">
             <BarChart2 className="h-3.5 w-3.5" />
-            <span>{token.trades?.length || 0}</span>
+            <span>{trades.length}</span>
           </div>
         </TabsTrigger>
       </TabsList>

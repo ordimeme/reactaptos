@@ -16,7 +16,7 @@ export function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
   return (
     <div className="fixed bottom-4 left-0 right-0 lg:hidden z-40 px-4">
       <nav className="max-w-md mx-auto">
-        <div className="flex items-stretch bg-background/80 backdrop-blur-lg border border-border/50 rounded-full shadow-lg shadow-black/5">
+        <div className="flex items-stretch bg-background/80 backdrop-blur-lg border border-border/50 rounded-sm shadow-lg shadow-black/5">
           {navItems.map((item, index) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -29,8 +29,8 @@ export function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
                 onClick={() => setActiveTab(item.id)}
                 className={cn(
                   "flex items-center justify-center gap-1.5 flex-1 py-2.5 transition-all duration-200",
-                  isFirst && "rounded-l-full pl-4 pr-2",
-                  isLast && "rounded-r-full pr-4 pl-2",
+                  isFirst && "rounded-l-sm pl-4 pr-2",
+                  isLast && "rounded-r-sm pr-4 pl-2",
                   !isFirst && !isLast && "px-2",
                   isActive && "bg-primary/10 text-primary",
                   !isActive && "text-muted-foreground hover:text-foreground"

@@ -1,39 +1,15 @@
-import { MarketItem, Trade, Comment, Holder, Pool } from "@/types/market";
+import { MarketItem, Comment, Holder, Pool } from "@/types/market";
 import { PriceSimulator } from "./priceData";
+import { formatDisplayPrice } from "@/utils/format";
 
-// 生成随机地址 - 确保生成完整的地址格式
+// 生成随机地址
 function generateRandomAddress(): string {
   const chars = '0123456789abcdef';
   let address = '0x';
-  // 生成40个字符的地址（不包括0x前缀）
   for (let i = 0; i < 40; i++) {
     address += chars[Math.floor(Math.random() * chars.length)];
   }
   return address;
-}
-
-// 生成交易数据
-function generateTrades(simulator: PriceSimulator, count: number = 20): Trade[] {
-  return Array.from({ length: count }, () => {
-    const isBuy = Math.random() > 0.4;  // 略微偏向买入
-    const amount = Math.floor(Math.random() * 1000) + 100;
-    const { price, slippage } = isBuy 
-      ? simulator.calculateBuyPrice(amount)
-      : simulator.calculateSellPrice(amount);
-    const volume = price * amount;
-    
-    return {
-      timestamp: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
-      aptAmount: price * amount,
-      tokenAmount: amount,
-      type: isBuy ? "buy" as const : "sell" as const,
-      txHash: `0x${Math.random().toString(36).substr(2, 64)}`,
-      trader: generateRandomAddress(),
-      price,
-      slippage,
-      volume
-    };
-  }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }
 
 // 生成评论数据
@@ -61,11 +37,10 @@ function generateComments(count: number = 10): Comment[] {
 
 // 生成持有者数据
 function generateHolders(pool: Pool, bondingProgress: number): Holder[] {
-  // 为确保总和为100%，预先计算每个持有者的百分比
   const percentages = [
     bondingProgress,  // Bonding Curve
     12.50, 10.00, 8.50, 7.00, 6.00, 5.00, 4.50, 4.00, 3.50,
-    ...Array(40).fill((100 - bondingProgress - 61) / 40)  // 剩余百分比平均分配
+    ...Array(40).fill((100 - bondingProgress - 61) / 40)
   ];
 
   return percentages.map((percentage, index) => ({
@@ -78,7 +53,6 @@ function generateHolders(pool: Pool, bondingProgress: number): Holder[] {
 
 // 生成初始市场数据
 export function createInitialMarketData(): MarketItem[] {
-  // 定义一些基础词汇用于组合生成名称
   const prefixes = [
     "Digital", "Crypto", "Aptos", "Neural", "Quantum", "Solar", "Lunar", "Stellar", "Meta", "Cyber",
     "Phoenix", "Dragon", "Crystal", "Ocean", "Forest", "Mountain", "Storm", "Thunder", "Lightning", "Fire"
@@ -94,70 +68,70 @@ export function createInitialMarketData(): MarketItem[] {
     "Dolphin", "Whale", "Shark", "Panda", "Koala", "Dragon", "Phoenix", "Unicorn", "Griffin", "Pegasus"
   ];
 
-  // 生成100个不重复的代币配置
-  const tokens = Array.from({ length: 100 }, () => {
-    const useAnimal = Math.random() > 0.7; // 30%概率使用动物名称
+  // 生成代币配置
+  const tokens = Array.from({ length: 100 }, (_, index) => {
+    const useAnimal = Math.random() > 0.7;
     const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
     const suffix = useAnimal 
       ? animalSuffixes[Math.floor(Math.random() * animalSuffixes.length)]
       : suffixes[Math.floor(Math.random() * suffixes.length)];
     
     const name = `${prefix} ${suffix}`;
-    // 生成符号：取每个单词的前1-2个字母
     const symbol = (prefix.slice(0, 2) + suffix.slice(0, 2)).toUpperCase();
     
-    return {
-      name,
-      symbol,
-      initialPrice: (1 + Math.random() * 9).toFixed(3), // 1-10之间的随机价格
-    };
-  });
-
-  return tokens.map((token, index) => {
+    // 生成初始价格（0.1-10 APT）
+    const initialPrice = (0.1 + Math.random() * 9.9).toFixed(4);
+    
     // 初始化价格模拟器
-    const simulator = new PriceSimulator(Number(token.initialPrice));
+    const simulator = new PriceSimulator(Number(initialPrice));
     const pool = simulator.getPoolState();
-    const bondingProgress = Math.floor(20 + Math.random() * 60);  // 20-80%
+    const bondingProgress = Math.floor(20 + Math.random() * 60);
     
-    // 生成不同的合约地址和创建者地址
-    const contractAddress = generateRandomAddress();
-    const creatorAddress = generateRandomAddress();
-    
-    // 计算市值和目标市值
-    const marketCap = pool.currentPrice * pool.currentSupply;
-    const dethroneCap = marketCap * (1.5 + Math.random());  // 1.5-2.5倍当前市值
-    
+    // 计算市值（USD）
+    const marketCapUSD = simulator.calculateMarketCapUSD();
+    const dethroneCap = marketCapUSD * (1.5 + Math.random());
+
+    console.log(`Initializing token ${index + 1}:`, {
+      symbol,
+      initialPriceAPT: formatDisplayPrice(Number(initialPrice)),
+      currentPriceAPT: formatDisplayPrice(pool.currentPrice),
+      currentPriceUSD: formatDisplayPrice(simulator.getCurrentPriceUSD()),
+      marketCapUSD: formatDisplayPrice(marketCapUSD),
+      bondingProgress: `${bondingProgress}%`
+    });
+
     return {
       id: `token-${index + 1}`,
-      name: token.name,
-      symbol: token.symbol,
-      contractAddress,
-      creator: creatorAddress,
-      description: `${token.name} - A revolutionary DeFi protocol built on Aptos, featuring an innovative bonding curve mechanism.`,
-      imageUrl: `/tokens/${token.symbol.toLowerCase()}.svg`,
+      name,
+      symbol,
+      contractAddress: generateRandomAddress(),
+      creator: generateRandomAddress(),
+      description: `${name} - A revolutionary DeFi protocol built on Aptos, featuring an innovative bonding curve mechanism.`,
+      imageUrl: `/tokens/${symbol.toLowerCase()}.svg`,
       
       // 价格相关
-      initialPrice: Number(token.initialPrice),
+      initialPrice: Number(initialPrice),
       currentPrice: pool.currentPrice,
-      priceChange24h: ((pool.currentPrice - Number(token.initialPrice)) / Number(token.initialPrice) * 100),
+      currentPriceUSD: simulator.getCurrentPriceUSD(),
+      priceChange24h: ((pool.currentPrice - Number(initialPrice)) / Number(initialPrice) * 100),
       
       // 市场相关
-      marketCap,
+      marketCap: marketCapUSD,  // 使用 USD 市值
       bondingProgress,
       liquidity: pool.liquidity,
       volume24h: pool.volume24h,
       
       // 社交链接
-      twitter: `https://twitter.com/${token.symbol.toLowerCase()}`,
-      discord: `https://discord.gg/${token.symbol.toLowerCase()}`,
-      telegram: `https://t.me/${token.symbol.toLowerCase()}`,
+      twitter: `https://twitter.com/${symbol.toLowerCase()}`,
+      discord: `https://discord.gg/${symbol.toLowerCase()}`,
+      telegram: `https://t.me/${symbol.toLowerCase()}`,
       
       // King of the Hill
       kingProgress: Math.floor(Math.random() * 100),
       dethroneCap,
       
       // 数据列表
-      trades: generateTrades(simulator),
+      trades: simulator.getRecentTrades(),
       comments: generateComments(),
       holders: generateHolders(pool, bondingProgress),
       
@@ -165,6 +139,13 @@ export function createInitialMarketData(): MarketItem[] {
       timestamp: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
     };
   });
+
+  console.log('Market data initialized:', {
+    totalTokens: tokens.length,
+    sampleToken: tokens[0]
+  });
+
+  return tokens;
 }
 
 export const marketData = createInitialMarketData();

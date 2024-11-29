@@ -84,7 +84,7 @@ export function Comments({
       {/* 评论输入区域 */}
       <form onSubmit={handleCommentSubmit} className="space-y-4">
         <Textarea
-          placeholder={connected ? "Write a comment..." : "Please connect wallet to comment"}
+          placeholder={connected ? "Write a comment on Aptos" : "Please connect wallet to comment"}
           value={commentContent}
           onChange={(e) => setCommentContent(e.target.value)}
           disabled={!connected}

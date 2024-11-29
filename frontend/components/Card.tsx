@@ -7,22 +7,21 @@ import { useToast } from "./ui/use-toast"
 import { ProgressRing } from "./ProgressRing"
 import { formatRelativeTime } from "@/utils/formatDate"
 import { usePriceContext } from "@/context/PriceContext"
+import { format } from "@/utils/format"
 
 interface CardProps {
   item: MarketItem;
   price?: PriceData;
 }
 
-const Card = ({ item, price }: CardProps) => {
+const Card = ({ item}: CardProps) => {
   const { toast } = useToast();
   const [imageError, setImageError] = useState(false);
-  const { tokenPrices } = usePriceContext();
+  const {liquidity } = usePriceContext();
 
-  // 使用传入的 price 或从 Context 获取价格
-  const currentPrice = price || tokenPrices[item.id] || {
-    change24h: '0.00',
-    close: item.currentPrice.toFixed(2)
-  };
+
+  // 获取流动性数据
+  const aptLiquidity = liquidity[item.id] || item.liquidity;
 
   // 处理复制功能
   const handleCopy = async (e: React.MouseEvent, address: string) => {
@@ -88,12 +87,13 @@ const Card = ({ item, price }: CardProps) => {
           <p className="text-sm text-muted-foreground">{item.symbol}</p>
         </div>
         <div className="text-right">
-          <p className="font-semibold text-base">MCap: ${item.marketCap.toLocaleString()}</p>
-          <p className={`text-sm ${
-            parseFloat(currentPrice.change24h) >= 0 ? "text-green-500" : "text-red-500"
-          }`}>
-            ({parseFloat(currentPrice.change24h) >= 0 ? "+" : ""}
-            {currentPrice.change24h}% 24h)
+          <p className="font-semibold text-base group/price">
+            <span className="block group-hover/price:hidden">
+              MCap: {format.marketCap(item.marketCap)}
+            </span>
+            <span className="hidden group-hover/price:block">
+              MCap: {format.aptMarketCap(item.marketCap)} APT
+            </span>
           </p>
         </div>
       </div>
@@ -126,9 +126,17 @@ const Card = ({ item, price }: CardProps) => {
 
       {/* Progress & Comments */}
       <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex flex-col">
+          <span className="text-xs text-muted-foreground">Liquidity:</span>
+          <div className="flex flex-col">
+            <span className="font-mono text-xs">
+              {format.liquidity(aptLiquidity)}
+            </span>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <ProgressRing progress={item.bondingProgress} size={14} strokeWidth={2} />
-          <span>{item.bondingProgress}%</span>
+          <span>{format.percentage(item.bondingProgress)}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <MessageCircle className="h-4 w-4" />

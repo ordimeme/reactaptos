@@ -1,4 +1,4 @@
-import { useState, useContext, useCallback, useEffect } from "react";
+import { useState, useContext, useCallback, useEffect, } from "react";
 import { useParams } from "react-router-dom";
 import { marketData } from "@/data/marketData";
 import { TokenInfo } from "./Components/TokenInfo";
@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { truncateAddress, getFullAddress } from "@/utils/truncateAddress";
 import { Comments } from "./Components/Comments";
 import { usePriceContext } from "@/context/PriceContext";
+import { formatDisplayPrice } from "@/utils/format";
 
 // 添加价格格式化函数
 const formatPrice = (price: string | number): string => {
@@ -30,7 +31,7 @@ export default function TokenPage() {
   const { theme } = useContext(ThemeContext);
   const { id } = useParams();
   const token = marketData.find(item => item.id === id);
-  const { initializePrice } = usePriceContext();
+  const { initializePrice, tokenPrices } = usePriceContext();
 
   // 确保在组件挂载时初始化价格
   useEffect(() => {
@@ -120,15 +121,19 @@ export default function TokenPage() {
     changePercent: '0.00'
   });
 
-  // 修改handlePriceUpdate函数
+  // 处理价格更新
   const handlePriceUpdate = useCallback((newPrice: PriceData) => {
-    console.log('TokenPage price update:', newPrice); // 添加日志
+    console.log('TokenPage price update:', {
+      newPrice,
+      contextPrice: tokenPrices[token?.id || '']
+    });
     setCurrentPrice(newPrice);
-  }, []);
+  }, [token?.id, tokenPrices]);
 
   // 处理图表hover价格更新（可选，如果需要在其他地方使用）
   const handleHoverPriceChange = useCallback(() => {
-    // 如果不需要处理 hover 价格变化，可以保留一个空函数
+    // 处理价格悬停变化的逻辑
+    console.log('Price hover changed');
   }, []);
 
 
@@ -221,7 +226,7 @@ export default function TokenPage() {
             {/* 右侧价格信息 */}
             <div className="text-right flex-shrink-0">
               <p className="text-lg sm:text-xl md:text-2xl font-bold">
-                ${formatPrice(currentPrice.close)}
+                ${formatDisplayPrice(currentPrice.close)}
               </p>
               <div className="flex items-center justify-end gap-2">
                 <p className={`text-xs sm:text-sm ${

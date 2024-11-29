@@ -1,11 +1,15 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
-import { MarketItem, Pool, PriceData } from '@/types/market';
+import { MarketItem, Pool, PriceData, Trade } from '@/types/market';
 import { PriceSimulator } from '@/data/priceData';
 import { marketData } from '@/data/marketData';
+import { formatDisplayPrice } from '@/utils/format';
+import { generatePriceData } from '@/data/chatData';
 
 interface PriceContextType {
   tokenPrices: Record<string, PriceData>;
+  tokenTrades: Record<string, Trade[]>;
   updatePrice: (newPrice: PriceData, tokenId: string) => void;
+  updateTrades: (newTrades: Trade[], tokenId: string) => void;
   initializePrice: (token: MarketItem) => void;
   priceSimulator: PriceSimulator | null;
   bondingProgress: Record<string, number>;
@@ -14,30 +18,11 @@ interface PriceContextType {
   poolStates: Record<string, Pool>;
 }
 
-const PRICE_STORAGE_KEY = 'token_prices';
-const LAST_UPDATE_KEY = 'last_price_update';
-
 const PriceContext = createContext<PriceContextType | undefined>(undefined);
 
 export function PriceProvider({ children }: { children: React.ReactNode }) {
-  const [tokenPrices, setTokenPrices] = useState<Record<string, PriceData>>(() => {
-    try {
-      const savedPrices = localStorage.getItem(PRICE_STORAGE_KEY);
-      const lastUpdate = localStorage.getItem(LAST_UPDATE_KEY);
-      
-      if (savedPrices && lastUpdate) {
-        const now = Date.now();
-        const lastUpdateTime = parseInt(lastUpdate);
-        if (now - lastUpdateTime < 24 * 60 * 60 * 1000) {
-          return JSON.parse(savedPrices);
-        }
-      }
-      return {};
-    } catch {
-      return {};
-    }
-  });
-
+  const [tokenPrices, setTokenPrices] = useState<Record<string, PriceData>>({});
+  const [tokenTrades, setTokenTrades] = useState<Record<string, Trade[]>>({});
   const [bondingProgress, setBondingProgress] = useState<Record<string, number>>({});
   const [liquidity, setLiquidity] = useState<Record<string, number>>({});
   const [volume24h, setVolume24h] = useState<Record<string, number>>({});
@@ -47,97 +32,138 @@ export function PriceProvider({ children }: { children: React.ReactNode }) {
   const initializationRef = useRef(false);
 
   const updatePrice = useCallback((newPrice: PriceData, tokenId: string) => {
-    console.log('Updating price:', { tokenId, newPrice });
-    
-    setTokenPrices(prev => {
-      const currentPrice = prev[tokenId];
-      if (currentPrice && 
-          currentPrice.close === newPrice.close && 
-          currentPrice.change24h === newPrice.change24h) {
-        return prev;
-      }
+    setTokenPrices(prev => ({
+      ...prev,
+      [tokenId]: newPrice
+    }));
+  }, []);
 
-      const updated = {
-        ...prev,
-        [tokenId]: newPrice
-      };
-      
-      try {
-        localStorage.setItem(PRICE_STORAGE_KEY, JSON.stringify(updated));
-        localStorage.setItem(LAST_UPDATE_KEY, Date.now().toString());
-      } catch (error) {
-        console.error('Failed to save prices to localStorage:', error);
+  const updateTrades = useCallback((newTrades: Trade[], tokenId: string) => {
+    setTokenTrades(prev => ({
+      ...prev,
+      [tokenId]: newTrades
+    }));
+  }, []);
+
+  const handlePriceUpdate = useCallback((tokenId: string) => (_: number, trade: Trade) => {
+    const simulator = simulatorsRef.current[tokenId];
+    if (!simulator) {
+      console.error('No simulator found for token:', tokenId);
+      return;
+    }
+
+    const poolState = simulator.getPoolState();
+    const allTrades = simulator.getRecentTrades();
+
+    // 使用 chatData 中的函数生成价格数据
+    const newPrice = generatePriceData(allTrades);
+
+    console.log('Price update:', {
+      tokenId,
+      price: newPrice,
+      trades: allTrades.length,
+      latestTrade: {
+        type: trade.type,
+        tokenAmount: formatDisplayPrice(trade.tokenAmount),
+        aptAmount: formatDisplayPrice(Math.abs(trade.aptAmount)),
+        price: formatDisplayPrice(trade.price),
+        priceUSD: formatDisplayPrice(trade.priceUSD)
       }
-      
-      return updated;
     });
 
-    if (simulatorsRef.current[tokenId]) {
-      const simulator = simulatorsRef.current[tokenId];
-      const poolState = simulator.getPoolState();
-      const price = parseFloat(newPrice.close);
-      
-      poolState.currentPrice = price;
-      
-      setBondingProgress(prev => ({
-        ...prev,
-        [tokenId]: (poolState.currentSupply / poolState.totalSupply) * 100
-      }));
+    // 更新所有状态
+    updatePrice(newPrice, tokenId);
+    updateTrades(allTrades, tokenId);
 
-      setLiquidity(prev => ({
-        ...prev,
-        [tokenId]: poolState.liquidity
-      }));
+    setBondingProgress(prev => ({
+      ...prev,
+      [tokenId]: (poolState.currentSupply / poolState.totalSupply) * 100
+    }));
 
-      setVolume24h(prev => ({
-        ...prev,
-        [tokenId]: simulator.get24hVolume()
-      }));
+    setLiquidity(prev => ({
+      ...prev,
+      [tokenId]: poolState.liquidity
+    }));
 
-      setPoolStates(prev => ({
-        ...prev,
-        [tokenId]: poolState
-      }));
-    }
-  }, []);
+    setVolume24h(prev => ({
+      ...prev,
+      [tokenId]: simulator.get24hVolume()
+    }));
+
+    setPoolStates(prev => ({
+      ...prev,
+      [tokenId]: poolState
+    }));
+  }, [updatePrice, updateTrades]);
 
   const initializePrice = useCallback((token: MarketItem) => {
     if (!simulatorsRef.current[token.id]) {
       console.log('Initializing price simulator for token:', token.id);
+      
+      // 创建新的模拟器实例
       const simulator = new PriceSimulator(token.currentPrice);
       simulatorsRef.current[token.id] = simulator;
       
-      const initialPrice: PriceData = {
-        open: token.currentPrice.toFixed(4),
-        high: token.currentPrice.toFixed(4),
-        low: token.currentPrice.toFixed(4),
-        close: token.currentPrice.toFixed(4),
-        time: new Date().toLocaleString('en-US', { 
-          timeZone: 'Asia/Shanghai',
-          hour12: false 
-        }),
-        price24h: token.currentPrice.toFixed(4),
-        time24h: new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleString('en-US', {
-          timeZone: 'Asia/Shanghai',
-          hour12: false
-        }),
-        change24h: '0.00',
-        changePercent: '0.00'
-      };
-
-      updatePrice(initialPrice, token.id);
+      // 先生成初始交易数据
+      simulator.generateInitialTrades();
+      const initialTrades = simulator.getRecentTrades();
       
+      // 使用初始交易数据生成价格数据
+      const initialPrice = generatePriceData(initialTrades);
+
+      console.log('Token initialization:', {
+        tokenId: token.id,
+        tradesCount: initialTrades.length,
+        initialPrice,
+        firstTrade: initialTrades[0],
+        lastTrade: initialTrades[initialTrades.length - 1]
+      });
+
+      // 立即更新状态
+      updateTrades(initialTrades, token.id);
+      updatePrice(initialPrice, token.id);
+
+      // 更新其他状态
+      const poolState = simulator.getPoolState();
+      setBondingProgress(prev => ({
+        ...prev,
+        [token.id]: (poolState.currentSupply / poolState.totalSupply) * 100
+      }));
+
+      setLiquidity(prev => ({
+        ...prev,
+        [token.id]: poolState.liquidity
+      }));
+
+      setVolume24h(prev => ({
+        ...prev,
+        [token.id]: simulator.get24hVolume()
+      }));
+
+      setPoolStates(prev => ({
+        ...prev,
+        [token.id]: poolState
+      }));
+
+      // 添加监听器并开始实时更新
+      simulator.addListener(handlePriceUpdate(token.id));
       simulator.startRealTimeUpdates(5000);
     }
-  }, [updatePrice]);
+  }, [handlePriceUpdate, updatePrice, updateTrades]);
 
+  // 初始化所有代币
   useEffect(() => {
     if (!initializationRef.current) {
-      console.log('Initializing all token prices');
-      marketData.forEach(token => {
-        initializePrice(token);
+      console.log('Starting market data initialization');
+      Promise.all(marketData.map(token => {
+        return new Promise<void>((resolve) => {
+          initializePrice(token);
+          resolve();
+        });
+      })).then(() => {
+        console.log('All tokens initialized');
+        initializationRef.current = true;
       });
-      initializationRef.current = true;
     }
 
     return () => {
@@ -150,7 +176,9 @@ export function PriceProvider({ children }: { children: React.ReactNode }) {
   return (
     <PriceContext.Provider value={{ 
       tokenPrices, 
+      tokenTrades,
       updatePrice, 
+      updateTrades,
       initializePrice,
       priceSimulator: simulatorsRef.current[Object.keys(simulatorsRef.current)[0]] || null,
       bondingProgress,
