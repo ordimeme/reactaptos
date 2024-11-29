@@ -111,7 +111,7 @@ const Card = ({ item, price }: CardProps) => {
       <div className="mt-4 flex items-center gap-2">
         <span className="text-sm text-muted-foreground whitespace-nowrap">CA:</span>
         <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-1.5 w-[180px] group-hover:bg-background/80 transition-colors duration-300">
-          <span className="text-sm font-mono text-foreground/80">{truncateAddress(item.creator)}</span>
+          <span className="text-sm font-mono text-foreground/80">{truncateAddress(item.creator, 6, 4, true)}</span>
           <Button 
             variant="ghost" 
             size="icon" 

@@ -24,18 +24,15 @@ const ActivityScroll: React.FC<ActivityScrollProps> = ({
 }) => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [imageCache, setImageCache] = useState<Record<string, boolean>>({});
+  const [imageError, setImageError] = useState<Record<string, boolean>>({});
 
   const getSafeImageUrl = (symbol: string) => {
-    if (imageCache[symbol] === false) {
-      return '/tokens/default.svg'
+    if (imageError[symbol]) {
+      return '/tokens/default.svg';
     }
-    try {
-      return `/tokens/${symbol.toLowerCase()}.svg`
-    } catch {
-      return '/tokens/default.svg'
-    }
-  }
+    const safeName = symbol.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return `/tokens/${safeName}.svg`;
+  };
 
   useEffect(() => {
     const generateActivity = () => {
@@ -96,8 +93,8 @@ const ActivityScroll: React.FC<ActivityScrollProps> = ({
           <ActivityItem 
             key={index} 
             activity={activity}
-            imageCache={imageCache}
-            setImageCache={setImageCache}
+            imageError={imageError}
+            setImageError={setImageError}
             getSafeImageUrl={getSafeImageUrl}
           />
         ))}
@@ -105,8 +102,8 @@ const ActivityScroll: React.FC<ActivityScrollProps> = ({
           <ActivityItem 
             key={`repeat-${index}`} 
             activity={activity}
-            imageCache={imageCache}
-            setImageCache={setImageCache}
+            imageError={imageError}
+            setImageError={setImageError}
             getSafeImageUrl={getSafeImageUrl}
           />
         ))}
@@ -116,16 +113,18 @@ const ActivityScroll: React.FC<ActivityScrollProps> = ({
 };
 
 // 活动项组件
-const ActivityItem = ({ 
-  activity, 
-  imageCache,
-  setImageCache,
-  getSafeImageUrl
-}: { 
+interface ActivityItemProps {
   activity: Activity;
-  imageCache: Record<string, boolean>;
-  setImageCache: (cache: Record<string, boolean>) => void;
+  imageError: Record<string, boolean>;
+  setImageError: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   getSafeImageUrl: (symbol: string) => string;
+}
+
+const ActivityItem: React.FC<ActivityItemProps> = ({ 
+  activity, 
+  imageError,
+  setImageError,
+  getSafeImageUrl
 }) => (
   <Link 
     to={`/token/${activity.tokenId}`}
@@ -136,10 +135,19 @@ const ActivityItem = ({
         src={getSafeImageUrl(activity.symbol)}
         alt={activity.symbol}
         className="w-full h-full object-cover"
-        onError={() => {
-          const newCache = { ...imageCache };
-          newCache[activity.symbol] = false;
-          setImageCache(newCache);
+        loading="lazy"
+        onError={(e) => {
+          if (!imageError[activity.symbol]) {
+            setImageError((prev: Record<string, boolean>) => ({
+              ...prev,
+              [activity.symbol]: true
+            }));
+            const target = e.target as HTMLImageElement;
+            target.src = '/tokens/default.svg';
+            if (process.env.NODE_ENV === 'development') {
+              console.warn(`Token image not found: ${activity.symbol}`);
+            }
+          }
         }}
       />
     </div>

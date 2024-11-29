@@ -78,22 +78,44 @@ function generateHolders(pool: Pool, bondingProgress: number): Holder[] {
 
 // 生成初始市场数据
 export function createInitialMarketData(): MarketItem[] {
-  const tokens = [
-    { name: "Digital Gold", symbol: "DGLD", initialPrice: 4.567 },
-    { name: "Crystal Token", symbol: "CRYS", initialPrice: 2.345 },
-    { name: "Phoenix", symbol: "PHNX", initialPrice: 3.456 },
-    { name: "Neural Network", symbol: "NNET", initialPrice: 1.234 },
-    { name: "Time Protocol", symbol: "TIME", initialPrice: 5.678 },
-    { name: "Stream Finance", symbol: "STRM", initialPrice: 2.789 },
-    { name: "Crypto Dragon", symbol: "CDRG", initialPrice: 3.901 },
-    { name: "Aptos Dog", symbol: "ADOG", initialPrice: 1.567 },
-    { name: "Aptos Fox", symbol: "AFOX", initialPrice: 2.678 },
-    { name: "Crypto Ray", symbol: "CRAY", initialPrice: 3.789 }
+  // 定义一些基础词汇用于组合生成名称
+  const prefixes = [
+    "Digital", "Crypto", "Aptos", "Neural", "Quantum", "Solar", "Lunar", "Stellar", "Meta", "Cyber",
+    "Phoenix", "Dragon", "Crystal", "Ocean", "Forest", "Mountain", "Storm", "Thunder", "Lightning", "Fire"
   ];
+  
+  const suffixes = [
+    "Gold", "Silver", "Bronze", "Token", "Protocol", "Network", "Chain", "Finance", "Coin", "Pay",
+    "Exchange", "Swap", "DAO", "DeFi", "AI", "Index", "Fund", "Verse", "World", "Universe"
+  ];
+  
+  const animalSuffixes = [
+    "Dog", "Cat", "Fox", "Bear", "Bull", "Wolf", "Lion", "Tiger", "Eagle", "Hawk",
+    "Dolphin", "Whale", "Shark", "Panda", "Koala", "Dragon", "Phoenix", "Unicorn", "Griffin", "Pegasus"
+  ];
+
+  // 生成100个不重复的代币配置
+  const tokens = Array.from({ length: 100 }, () => {
+    const useAnimal = Math.random() > 0.7; // 30%概率使用动物名称
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const suffix = useAnimal 
+      ? animalSuffixes[Math.floor(Math.random() * animalSuffixes.length)]
+      : suffixes[Math.floor(Math.random() * suffixes.length)];
+    
+    const name = `${prefix} ${suffix}`;
+    // 生成符号：取每个单词的前1-2个字母
+    const symbol = (prefix.slice(0, 2) + suffix.slice(0, 2)).toUpperCase();
+    
+    return {
+      name,
+      symbol,
+      initialPrice: (1 + Math.random() * 9).toFixed(3), // 1-10之间的随机价格
+    };
+  });
 
   return tokens.map((token, index) => {
     // 初始化价格模拟器
-    const simulator = new PriceSimulator(token.initialPrice);
+    const simulator = new PriceSimulator(Number(token.initialPrice));
     const pool = simulator.getPoolState();
     const bondingProgress = Math.floor(20 + Math.random() * 60);  // 20-80%
     
@@ -109,15 +131,15 @@ export function createInitialMarketData(): MarketItem[] {
       id: `token-${index + 1}`,
       name: token.name,
       symbol: token.symbol,
-      contractAddress, // 添加合约地址
-      creator: creatorAddress, // 创建者地址
+      contractAddress,
+      creator: creatorAddress,
       description: `${token.name} - A revolutionary DeFi protocol built on Aptos, featuring an innovative bonding curve mechanism.`,
       imageUrl: `/tokens/${token.symbol.toLowerCase()}.svg`,
       
       // 价格相关
-      initialPrice: token.initialPrice,
+      initialPrice: Number(token.initialPrice),
       currentPrice: pool.currentPrice,
-      priceChange24h: ((pool.currentPrice - token.initialPrice) / token.initialPrice * 100),
+      priceChange24h: ((pool.currentPrice - Number(token.initialPrice)) / Number(token.initialPrice) * 100),
       
       // 市场相关
       marketCap,
