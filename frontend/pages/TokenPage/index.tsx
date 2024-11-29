@@ -61,19 +61,6 @@ export default function TokenPage() {
   const [aptBalance, _setAptBalance] = useState<number>(0);
   const [tokenBalance, _setTokenBalance] = useState<number>(0);
 
-  // 添加响应式状态
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
-
-  // 添加响应式监听
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 640);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   if (!token) {
     return <div className="container mx-auto px-4 py-8">Token not found</div>;
   }
@@ -201,9 +188,9 @@ export default function TokenPage() {
   };
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 pb-[140px] lg:pb-8">
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 pb-[48px] lg:pb-8 max-w-[1440px]">
       {/* Token Info Card */}
-      <Card className="border-muted/40 dark:border-muted/20 mb-4 sm:mb-8">
+      <Card className="border-muted/40 dark:border-muted/20 mb-4 overflow-hidden">
         <CardHeader className="flex flex-col gap-4 p-3 sm:p-6">
           {/* 顶部区域：图标和格 */}
           <div className="flex items-start justify-between gap-3">
@@ -248,48 +235,40 @@ export default function TokenPage() {
           </div>
 
           {/* 底部区域：合约地址和创建者地址 */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
             {/* Contract Address */}
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {isMobile ? "CA:" : "Contract:"}
-              </span>
-              <div className="flex items-center flex-1 min-w-0">
-                <div className="flex items-center min-w-0 flex-1">
-                  <span className="text-xs font-mono truncate">
-                    {truncateAddress(token.contractAddress, 6, 4, isMobile)}
-                  </span>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-5 w-5 hover:bg-muted/50 ml-2"
-                    onClick={() => handleCopyCA(token.contractAddress)}
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-muted-foreground">CA:</span>
+              <div className="flex items-center">
+                <span className="font-mono">
+                  {truncateAddress(token.contractAddress, 6, 4, true)}
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-5 w-5 hover:bg-muted/50 ml-1"
+                  onClick={() => handleCopyCA(token.contractAddress)}
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
               </div>
             </div>
 
             {/* Creator Address */}
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {isMobile ? "CR:" : "Creator:"}
-              </span>
-              <div className="flex items-center flex-1 min-w-0">
-                <div className="flex items-center min-w-0 flex-1">
-                  <span className="text-xs font-mono truncate">
-                    {truncateAddress(token.creator, 6, 4, isMobile)}
-                  </span>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-5 w-5 hover:bg-muted/50 ml-2"
-                    onClick={() => handleCopyCA(token.creator)}
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-muted-foreground">CR:</span>
+              <div className="flex items-center">
+                <span className="font-mono">
+                  {truncateAddress(token.creator, 6, 4, true)}
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-5 w-5 hover:bg-muted/50 ml-1"
+                  onClick={() => handleCopyCA(token.creator)}
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
               </div>
             </div>
           </div>
@@ -299,7 +278,7 @@ export default function TokenPage() {
       {/* 桌面端布局 */}
       <div className="hidden lg:flex lg:flex-row gap-6">
         {/* 左侧列 */}
-        <div className="w-[calc(100%-480px)] space-y-6">
+        <div className="flex-1 min-w-0 space-y-6">
           <ChartView 
             token={token} 
             onPriceUpdate={handlePriceUpdate}
@@ -317,7 +296,7 @@ export default function TokenPage() {
         </div>
 
         {/* 右侧列 */}
-        <div className="w-[460px] space-y-6">
+        <div className="w-[420px] flex-shrink-0 space-y-6">
           <TradeCard 
             token={{
               ...token,
@@ -341,7 +320,7 @@ export default function TokenPage() {
       </div>
 
       {/* 移动端布局 */}
-      <div className="lg:hidden space-y-4">
+      <div className="lg:hidden space-y-4 -mx-2 sm:mx-0">
         {renderMobileContent()}
       </div>
 

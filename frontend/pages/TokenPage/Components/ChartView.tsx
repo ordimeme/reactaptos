@@ -323,9 +323,9 @@ export function ChartView({ token, initialPrice, onPriceUpdate }: ChartViewProps
   }, []);
 
   return (
-    <Card className="border-muted/40 dark:border-muted/20">
-      <CardHeader className="pb-2 px-4">
-        <div className="flex flex-col gap-4">
+    <Card className="border-muted/40 dark:border-muted/20 w-full overflow-hidden">
+      <CardHeader className="pb-2 px-3 sm:px-4">
+        <div className="flex flex-col gap-3 sm:gap-4">
           <PriceDisplay 
             price={hoveredPrice || initialPrice} 
             className="pointer-events-none"
@@ -336,21 +336,20 @@ export function ChartView({ token, initialPrice, onPriceUpdate }: ChartViewProps
           />
         </div>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-0 relative">
         <div 
           ref={chartContainerRef}
-          className="tradingview-chart-container"
+          className="tradingview-chart-container w-full"
           style={{ 
-            padding: '0 16px',
-            height: isMobile ? '300px' : '600px',
+            padding: '0 12px',
+            height: isMobile ? '280px' : '600px',
             display: isLoading ? 'none' : 'block',
-            width: '100%'
           }}
         />
         {isLoading && <LoadingView />}
         <TimeDisplay 
           time={(hoveredPrice || initialPrice).time}
-          className="pointer-events-none"
+          className="pointer-events-none absolute bottom-2 left-4"
         />
       </CardContent>
     </Card>

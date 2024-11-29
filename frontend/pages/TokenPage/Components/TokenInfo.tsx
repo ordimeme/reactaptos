@@ -160,7 +160,7 @@ export function TokenInfo({ token }: TokenInfoProps) {
   );
 
   return (
-    <div className="space-y-6 px-2 md:px-4">
+    <div className="space-y-6 px-4">
       {/* Token Metrics */}
       <div className="grid grid-cols-2 gap-3">
         {/* Market Cap Card */}

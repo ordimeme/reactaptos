@@ -103,7 +103,7 @@ const NavMobile = ({ isOpen, toggleMenu}: NavMobileProps) => {
                 onClick={toggleMenu}
                 className="p-2 rounded-lg hover:bg-[var(--softBg)] transition-colors"
               >
-                <X size={20} />
+                <X size={26} />
               </button>
             </div>
 

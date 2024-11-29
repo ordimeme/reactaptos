@@ -64,12 +64,7 @@ export function TradesView({ token }: TradesViewProps) {
   const currentTrades = token.trades.slice(startIndex, startIndex + TRADES_PER_PAGE);
 
   return (
-    <div className="-mx-2 sm:mx-0 space-y-4" ref={tradesRef}>
-      {/* 页码信息显示 */}
-      <div className="text-sm text-muted-foreground px-4 sm:px-0">
-        Showing {startIndex + 1} to {Math.min(startIndex + TRADES_PER_PAGE, token.trades.length)} of {token.trades.length} trades
-      </div>
-
+    <div className="mx-0 sm:mx-0 space-y-4" ref={tradesRef}>
       <div className="overflow-x-auto">
         <div className="min-w-[600px]">
           <div className="rounded-none sm:rounded-lg border-x-0 sm:border-x border-t border-b border-muted/40 dark:border-muted/20 overflow-hidden">

@@ -10,24 +10,30 @@ interface PriceDisplayProps {
 export const PriceDisplay = ({ price, className }: PriceDisplayProps) => (
   <div className={`flex flex-col gap-1.5 ${className}`}>
     {/* OHLC 数据 */}
-    <div className="grid grid-cols-4 text-[10px] sm:text-xs text-muted-foreground">
-      <div className="flex flex-col min-w-0">
-        <span>Open: <span className="font-mono truncate">{price.open}</span></span>
+    <div className="grid grid-cols-4 sm:grid-cols-4 gap-x-4 gap-y-1.5 text-[10px] sm:text-xs text-muted-foreground">
+      <div className="flex flex-col">
+        <span className="opacity-70">Open</span>
+        <span className="font-mono">{price.open}</span>
       </div>
-      <div className="flex flex-col min-w-0">
-        <span>High: <span className="font-mono truncate">{price.high}</span></span>
+      <div className="flex flex-col">
+        <span className="opacity-70">High</span>
+        <span className="font-mono">{price.high}</span>
       </div>
-      <div className="flex flex-col min-w-0">
-        <span>Low: <span className="font-mono truncate">{price.low}</span></span>
+      <div className="flex flex-col">
+        <span className="opacity-70">Low</span>
+        <span className="font-mono">{price.low}</span>
       </div>
-      <div className="flex items-center gap-1 min-w-0">
-        <span>Close: <span className="font-mono truncate">{price.close}</span></span>
-        <span className={`${
-          parseFloat(price.changePercent) >= 0 ? "text-green-500" : "text-red-500"
-        }`}>
-          {parseFloat(price.changePercent) >= 0 ? "+" : ""}
-          {price.changePercent}%
-        </span>
+      <div className="flex flex-col">
+        <span className="opacity-70">Close</span>
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono">{price.close}</span>
+          <span className={`${
+            parseFloat(price.changePercent) >= 0 ? "text-green-500" : "text-red-500"
+          }`}>
+            {parseFloat(price.changePercent) >= 0 ? "+" : ""}
+            {price.changePercent}%
+          </span>
+        </div>
       </div>
     </div>
   </div>
