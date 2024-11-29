@@ -1,5 +1,6 @@
-import { MarketItem, Trade } from "@/data/marketData";
+import { MarketItem, Trade } from "@/types/market";
 import { getPriceData } from "@/data/priceData";
+import { PriceSimulator } from "@/data/priceData";
 
 /**
  * 计算指定时间区间的价格变化百分比
@@ -30,7 +31,7 @@ export const calculatePriceChangeByInterval = (interval: string, currentPrice: n
 
   // 获取与图表相同的K线数据
   const { timeStep, count } = getTimeStepAndCount(interval);
-  const chartData = getPriceData("", currentPrice, timeStep, count);
+  const chartData = getPriceData(currentPrice, timeStep, count);
 
   // 使用K线数据计算价格变化
   if (chartData.length < 2) return 0;
@@ -47,7 +48,12 @@ export const calculatePriceChangeByInterval = (interval: string, currentPrice: n
  * 获取Top Gainer项目
  */
 export const getTopGainer = (marketData: MarketItem[]): MarketItem => {
-  return [...marketData].sort((a, b) => b.priceChange24h - a.priceChange24h)[0];
+  const simulator = new PriceSimulator(0);
+  return [...marketData].sort((tokenA, tokenB) => {
+    const priceChangeA = simulator.getCurrentPrice() - tokenA.currentPrice;
+    const priceChangeB = simulator.getCurrentPrice() - tokenB.currentPrice;
+    return priceChangeB - priceChangeA;
+  })[0];
 };
 
 /**
@@ -144,25 +150,70 @@ export const getFilteredAndSortedData = (
 };
 
 /**
- * 计算24小时价格变化百分比
- * @param trades 交易历史记录
+ * 计算价格变化百分比
+ * @param currentPrice 当前价格
+ * @param previousPrice 前一个价格
  * @returns 价格变化百分比
  */
-export const calculate24hPriceChange = (trades: Trade[]): number => {
-  const now = Date.now();
-  const oneDayAgo = now - 24 * 60 * 60 * 1000;
+export const calculatePriceChange = (
+  currentPrice: number,
+  previousPrice: number
+): string => {
+  if (previousPrice === 0) return '0.00';
+  return ((currentPrice - previousPrice) / previousPrice * 100).toFixed(2);
+};
 
-  // 获取24小时内的交易
-  const recentTrades = trades
-    .filter(trade => new Date(trade.timestamp).getTime() > oneDayAgo)
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+/**
+ * 计算24小时价格变化
+ * @param currentPrice 当前价格
+ * @param price24h 24小时前的价格
+ * @returns 价格变化百分比
+ */
+export const calculate24hPriceChange = (
+  currentPrice: number,
+  price24h: number
+): string => {
+  return calculatePriceChange(currentPrice, price24h);
+};
 
-  if (recentTrades.length < 2) return 0;
+/**
+ * 计算单个K线的涨跌幅
+ * @param open 开盘价
+ * @param close 收盘价
+ * @returns 涨跌幅百分比
+ */
+export const calculateChangePercent = (
+  open: number,
+  close: number
+): string => {
+  if (open === 0) return '0.00';
+  return ((close - open) / open * 100).toFixed(2);
+};
 
-  // 获取最新价格和24小时前的价格
-  const latestPrice = recentTrades[0].aptAmount / recentTrades[0].tokenAmount;
-  const oldestPrice = recentTrades[recentTrades.length - 1].aptAmount / recentTrades[recentTrades.length - 1].tokenAmount;
+/**
+ * 计算交易量变化
+ * @param currentVolume 当前交易量
+ * @param previousVolume 前一个交易量
+ * @returns 交易量变化百分比
+ */
+export const calculateVolumeChange = (
+  currentVolume: number,
+  previousVolume: number
+): string => {
+  if (previousVolume === 0) return '0.00';
+  return ((currentVolume - previousVolume) / previousVolume * 100).toFixed(2);
+};
 
-  // 计算价格变化百分比
-  return ((latestPrice - oldestPrice) / oldestPrice) * 100;
+/**
+ * 计算市值变化
+ * @param currentMarketCap 当前市值
+ * @param previousMarketCap 前一个市值
+ * @returns 市值变化百分比
+ */
+export const calculateMarketCapChange = (
+  currentMarketCap: number,
+  previousMarketCap: number
+): string => {
+  if (previousMarketCap === 0) return '0.00';
+  return ((currentMarketCap - previousMarketCap) / previousMarketCap * 100).toFixed(2);
 }; 

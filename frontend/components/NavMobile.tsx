@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { X, AlignJustify } from 'lucide-react';
 import ThemeToggle from './ThemeToggle'
 import { cn } from "@/lib/utils"
-import { useContext } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { ThemeContext } from '@/context/ThemeContext';
 
 interface NavMobileProps {
@@ -16,6 +16,46 @@ const NavMobile = ({ isOpen, toggleMenu}: NavMobileProps) => {
     { to: '/markets', label: 'Market' },
     { to: '/create', label: 'Create' },
   ];
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  // 处理触摸事件
+  const handleTouchStart = (e: TouchEvent) => {
+    touchStartX = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    touchEndX = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const swipeDistance = touchEndX - touchStartX;
+    
+    // 向左滑动关闭菜单
+    if (isOpen && swipeDistance < -50) {
+      toggleMenu();
+    }
+    // 向右滑动打开菜单
+    else if (!isOpen && swipeDistance > 50) {
+      toggleMenu();
+    }
+  };
+
+  useEffect(() => {
+    const sidebar = sidebarRef.current;
+    if (sidebar) {
+      sidebar.addEventListener('touchstart', handleTouchStart);
+      sidebar.addEventListener('touchmove', handleTouchMove);
+      sidebar.addEventListener('touchend', handleTouchEnd);
+
+      return () => {
+        sidebar.removeEventListener('touchstart', handleTouchStart);
+        sidebar.removeEventListener('touchmove', handleTouchMove);
+        sidebar.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+  }, [isOpen]);
 
   // 获取当前主题名称
   const getThemeName = () => {
@@ -41,11 +81,14 @@ const NavMobile = ({ isOpen, toggleMenu}: NavMobileProps) => {
           />
           
           {/* 侧边栏 - 添加滑入动画 */}
-          <div className={cn(
-            "fixed top-0 left-0 bottom-0 w-[80%] bg-background z-50 shadow-xl",
-            "transform transition-transform duration-300 ease-out",
-            isOpen ? "translate-x-0" : "-translate-x-full"
-          )}>
+          <div 
+            ref={sidebarRef}
+            className={cn(
+              "fixed top-0 left-0 bottom-0 w-[80%] bg-background z-50 shadow-xl",
+              "transform transition-transform duration-300 ease-out touch-pan-y",
+              isOpen ? "translate-x-0" : "-translate-x-full"
+            )}
+          >
             {/* 顶部区域 */}
             <div className="flex items-center justify-between p-4 border-b border-border/40">
               <div className="flex items-center gap-3">

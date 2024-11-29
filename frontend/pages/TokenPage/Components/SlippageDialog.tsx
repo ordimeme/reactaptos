@@ -40,7 +40,7 @@ export function SlippageDialog({
       <AlertDialogContent className="bg-[var(--softBg)] border border-gray-800">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-xl mb-4">
-            Set Max Slippage (%)
+            Set Slippage (%)
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-4">
             {/* Slippage Input */}
@@ -78,7 +78,7 @@ export function SlippageDialog({
 
             {/* Priority Fee */}
             <div className="space-y-2">
-              <span>priority fee</span>
+              <span>Priority Fee</span>
               <div className="relative">
                 <Input
                   type="number"

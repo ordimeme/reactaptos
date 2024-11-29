@@ -1,13 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MarketItem } from "@/data/marketData";
+import { MarketItem } from "@/types/market";
 import { truncateAddress } from "@/utils/truncateAddress";
-import { useWallet, WalletName } from "@aptos-labs/wallet-adapter-react";
+import { useWalletConnect } from "@/hooks/useWalletConnect";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { Pagination } from "@/components/Pagination";
 import { formatRelativeTime } from "@/utils/formatDate";
 import { MessageCircle } from "lucide-react";
+import { Comment } from "@/types/market";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { ConnectWalletDialog } from "@/components/WalletSelector";
 
 interface CommentsProps {
   token: MarketItem;
@@ -24,9 +27,10 @@ export function Comments({
   setCommentContent,
   handleSubmitComment,
 }: CommentsProps) {
-  const { account, connected, connect } = useWallet();
+  const { connected, account } = useWalletConnect();
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const totalPages = Math.ceil((token.comments?.length || 0) / COMMENTS_PER_PAGE);
 
@@ -39,16 +43,9 @@ export function Comments({
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!connected) {
-      try {
-        await connect("petra" as WalletName);
-      } catch (error) {
-        toast({
-          title: "Connection failed",
-          description: "Please install Petra wallet first",
-          variant: "destructive",
-        });
-      }
+      setIsDialogOpen(true);
       return;
     }
     
@@ -60,6 +57,16 @@ export function Comments({
       });
       return;
     }
+
+    if (!commentContent.trim()) {
+      toast({
+        title: "Error", 
+        description: "Comment cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
     handleSubmitComment();
   };
 
@@ -84,19 +91,27 @@ export function Comments({
           className="min-h-[100px]"
         />
         <div className="flex justify-end">
-          <Button 
-            type="submit" 
-            disabled={connected && !commentContent.trim()}
-            variant={connected ? "default" : "secondary"}
-          >
-            {connected ? "Post" : "Connect Wallet"}
-          </Button>
+          {connected ? (
+            <Button 
+              type="submit" 
+              disabled={!commentContent.trim()}
+            >
+              Post
+            </Button>
+          ) : (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="secondary">Connect Wallet</Button>
+              </DialogTrigger>
+              <ConnectWalletDialog close={() => setIsDialogOpen(false)} />
+            </Dialog>
+          )}
         </div>
       </form>
 
       {/* 评论列表 */}
       <div className="space-y-4">
-        {getCurrentPageComments().map((comment, index) => (
+        {getCurrentPageComments().map((comment: Comment, index: number) => (
           <div 
             key={index}
             className="border border-muted/40 dark:border-muted/20 rounded-lg p-4 space-y-2"
@@ -105,7 +120,7 @@ export function Comments({
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-muted-foreground">
-                  {truncateAddress(comment.address)}
+                  {truncateAddress(comment.author, 6, 4, true)}
                 </span>
               </div>
               <span className="text-muted-foreground">

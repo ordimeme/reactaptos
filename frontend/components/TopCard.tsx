@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom"
 import { Flame, Info } from "lucide-react"
 import { Card as UICard, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { MarketItem } from "@/data/marketData"
+import { MarketItem } from "@/types/market"
+import { PriceData } from "@/types/market"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { ProgressRing } from "./ProgressRing"
@@ -11,10 +12,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { usePriceContext } from "@/context/PriceContext";
 
 interface TopCardProps {
   title: string
   item: MarketItem
+  price?: PriceData
 }
 
 const GoldCoin = () => (
@@ -99,6 +102,7 @@ const GoldCoin = () => (
 );
 
 const TopCard = ({ title, item }: TopCardProps) => {
+  const { tokenPrices } = usePriceContext();
   const [imageCache, setImageCache] = useState<Record<string, boolean>>({})
 
   const getSafeImageUrl = (symbol: string) => {
@@ -111,6 +115,11 @@ const TopCard = ({ title, item }: TopCardProps) => {
       return '/tokens/default.svg'
     }
   }
+
+  const currentPrice = tokenPrices[item.id] || {
+    change24h: '0.00',
+    close: item.currentPrice.toFixed(2)
+  };
 
   return (
     <Link 
@@ -179,8 +188,11 @@ const TopCard = ({ title, item }: TopCardProps) => {
                       </TooltipProvider>
                     )}
                   </div>
-                  <div className={`text-sm font-medium ${item.priceChange24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {item.priceChange24h >= 0 ? '+' : ''}{item.priceChange24h.toFixed(2)}%
+                  <div className={`text-sm font-medium ${
+                    parseFloat(currentPrice.change24h) >= 0 ? 'text-green-500' : 'text-red-500'
+                  }`}>
+                    {parseFloat(currentPrice.change24h) >= 0 ? '+' : ''}
+                    {currentPrice.change24h}%
                   </div>
                 </div>
               </div>
@@ -189,7 +201,7 @@ const TopCard = ({ title, item }: TopCardProps) => {
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground/70">Price:</span>
-                  <span>${item.price.toFixed(2)}</span>
+                  <span>${item.currentPrice.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <ProgressRing progress={item.bondingProgress} />

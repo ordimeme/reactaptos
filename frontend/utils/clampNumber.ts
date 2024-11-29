@@ -68,21 +68,21 @@ export function formatTokenAmount(amount: number): string {
   if (amount === 0) return '0';
 
   try {
-    // 处理小于1的数字，保留8位小数并去除末尾的0
+    // 处理小于1的数字，最多保留4位小数
     if (amount < 1) {
-      return amount.toFixed(8).replace(/\.?0+$/, '');
+      return amount.toFixed(4).replace(/\.?0+$/, '');
     }
 
-    // 处理大于等于1的数字
+    // 处理大数字
     if (amount >= 1_000_000) {
-      return safeDivide(amount, 1_000_000).toFixed(2).replace(/\.?0+$/, '') + 'M';
+      return (amount / 1_000_000).toFixed(2).replace(/\.?0+$/, '') + 'M';
     }
     
     if (amount >= 1_000) {
-      return safeDivide(amount, 1_000).toFixed(2).replace(/\.?0+$/, '') + 'K';
+      return (amount / 1_000).toFixed(2).replace(/\.?0+$/, '') + 'K';
     }
 
-    // 其他情况保留2位小数并去除末尾的0
+    // 其他情况保留2位小数
     return amount.toFixed(2).replace(/\.?0+$/, '');
   } catch (error) {
     if (error instanceof Error) {

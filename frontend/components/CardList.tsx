@@ -1,16 +1,18 @@
 import { Link } from "react-router-dom"
-import { MarketItem } from "@/data/marketData"
+import { MarketItem, PriceData } from "@/types/market"
 import Card from "./Card"
 import { Pagination } from "./Pagination"
 import { useState, useEffect, useRef } from "react"
+import { cn } from "@/lib/utils"
 
 const ITEMS_PER_PAGE = 18
 
 interface CardListProps {
   initialData: MarketItem[]
+  tokenPrices?: Record<string, PriceData>
 }
 
-const CardList = ({ initialData }: CardListProps) => {
+const CardList = ({ initialData, tokenPrices = {} }: CardListProps) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [data, setData] = useState<MarketItem[]>(initialData)
   const listRef = useRef<HTMLDivElement>(null)
@@ -39,13 +41,19 @@ const CardList = ({ initialData }: CardListProps) => {
         ref={listRef}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
-        {getCurrentPageData().map((item) => (
+        {getCurrentPageData().map((item, index) => (
           <Link 
             key={item.id} 
             to={`/token/${item.id}`} 
-            className="hover:no-underline"
+            className={cn(
+              "hover:no-underline",
+              index === 0 && "animate-first-card"
+            )}
           >
-            <Card item={item} />
+            <Card 
+              item={item} 
+              price={tokenPrices[item.id]} 
+            />
           </Link>
         ))}
       </div>

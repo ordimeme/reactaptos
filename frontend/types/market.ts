@@ -1,44 +1,75 @@
+export type ChartTheme = 'dark' | 'light';
+
+export interface PriceData {
+  time: string;
+  open: string;
+  high: string;
+  low: string;
+  close: string;
+  price24h: string;
+  time24h: string;
+  change24h: string;
+  changePercent: string;
+}
+
+export interface Trade {
+  timestamp: string;
+  aptAmount: number;
+  tokenAmount: number;
+  type: 'buy' | 'sell';
+  txHash: string;
+  trader: string;
+  price: number;
+  slippage: number;
+  volume?: number;
+}
+
 export interface Comment {
-  address: string;
+  id: string;
   content: string;
   timestamp: string;
+  author: string;
 }
 
 export interface Holder {
   address: string;
   balance: number;
   percentage: number;
-  type: string;
+  type: "bonding curve" | "regular";
 }
 
-export interface Trade {
-  account: string;
-  type: 'buy' | 'sell';
-  tokenAmount: number;
-  aptAmount: number;
-  timestamp: string;
-  txHash: string;
+export interface Pool {
+  tokenReserve: number;
+  aptReserve: number;
+  totalSupply: number;
+  currentSupply: number;
+  currentPrice: number;
+  volume24h: number;
+  liquidity: number;
 }
 
 export interface MarketItem {
   id: string;
   name: string;
   symbol: string;
-  price: number;
-  marketCap: number;
-  volume24h: number;
-  liquidity?: number;
-  holders: number;
-  totalSupply: number;
+  contractAddress: string;
   creator: string;
   description?: string;
+  imageUrl?: string;
+  initialPrice: number;
+  currentPrice: number;
+  priceChange24h: number;
+  marketCap: number;
+  bondingProgress: number;
+  liquidity: number;
+  volume24h: number;
   twitter?: string;
   discord?: string;
   telegram?: string;
-  bondingProgress: number;
-  kingProgress: number;
-  dethroneCap: number;
+  kingProgress?: number;
+  dethroneCap?: number;
   trades: Trade[];
   comments: Comment[];
-  imageUrl?: string;
+  holders: Holder[];
+  timestamp: string;
 } 

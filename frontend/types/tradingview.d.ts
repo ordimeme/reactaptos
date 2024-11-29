@@ -1,80 +1,140 @@
-declare module '@/types/tradingview' {
-  export interface LibrarySymbolInfo {
-    name: string;
-    full_name: string;
-    description: string;
-    type: string;
-    session: string;
-    timezone: string;
-    minmov: number;
-    pricescale: number;
-    has_intraday: boolean;
-    supported_resolutions: string[];
-  }
+declare module 'lightweight-charts' {
+  export type Time = number | string;
+  export type DeepPartial<T> = { [P in keyof T]?: DeepPartial<T[P]> };
 
-  export interface Bar {
-    time: number;
+  export interface CandlestickData<T = Time> {
+    time: T;
     open: number;
     high: number;
     low: number;
     close: number;
-    volume: number;
   }
 
-  export interface DatafeedConfiguration {
-    supported_resolutions: string[];
-    supports_time?: boolean;
-    supports_marks?: boolean;
-    supports_timescale_marks?: boolean;
-  }
-
-  export interface TradingViewWidget {
-    new (config: {
-      symbol: string;
-      interval: string;
-      container_id: string;
-      theme?: "light" | "dark";
-      locale?: string;
-      toolbar_bg?: string;
-      enable_publishing?: boolean;
-      allow_symbol_change?: boolean;
-      save_image?: boolean;
-      height?: number | string;
-      width?: number | string;
-      autosize?: boolean;
-      show_popup_button?: boolean;
-      popup_width?: string;
-      popup_height?: string;
-      hide_side_toolbar?: boolean;
-      hide_legend?: boolean;
-      hide_top_toolbar?: boolean;
-      studies?: string[];
-      timezone?: string;
-      datafeed?: {
-        onReady: (callback: (config: DatafeedConfiguration) => void) => void;
-        resolveSymbol: (
-          symbolName: string,
-          onSymbolResolvedCallback: (symbolInfo: LibrarySymbolInfo) => void
-        ) => void;
-        getBars: (
-          symbolInfo: LibrarySymbolInfo,
-          resolution: string,
-          periodParams: {
-            from: number;
-            to: number;
-            countBack: number;
-          },
-          onHistoryCallback: (bars: Bar[]) => void
-        ) => void;
-        subscribeBars: () => void;
-        unsubscribeBars: () => void;
+  export interface ChartOptions {
+    width: number;
+    height: number;
+    layout?: {
+      background?: {
+        type?: ColorType;
+        color?: string;
       };
-    }): void;
+      textColor?: string;
+      fontSize?: number;
+    };
+    grid?: {
+      vertLines?: {
+        color?: string;
+        style?: number;
+      };
+      horzLines?: {
+        color?: string;
+        style?: number;
+      };
+    };
+    timeScale?: {
+      timeVisible?: boolean;
+      secondsVisible?: boolean;
+      borderColor?: string;
+      tickMarkFormatter?: (time: number) => string;
+      fixLeftEdge?: boolean;
+      fixRightEdge?: boolean;
+    };
+    rightPriceScale?: PriceScaleOptions;
+    crosshair?: CrosshairOptions;
+    handleScale?: HandleScaleOptions;
+    handleScroll?: HandleScrollOptions;
   }
 
-  export interface Window {
-    TradingView: {
-      widget: TradingViewWidget;
+  export interface PriceScaleOptions {
+    autoScale?: boolean;
+    mode?: number;
+    invertScale?: boolean;
+    alignLabels?: boolean;
+    scaleMargins?: {
+      top?: number;
+      bottom?: number;
+    };
+    borderVisible?: boolean;
+    borderColor?: string;
+    visible?: boolean;
+    entireTextOnly?: boolean;
+    format?: {
+      type: 'price' | 'custom';
+      precision: number;
+      minMove: number;
+      formatter?: (price: number) => string;
     };
   }
+
+  export interface CrosshairOptions {
+    mode?: number;
+    vertLine?: LineOptions;
+    horzLine?: LineOptions;
+  }
+
+  export interface HandleScaleOptions {
+    axisPressedMouseMove?: {
+      time?: boolean;
+      price?: boolean;
+    };
+    mouseWheel?: boolean;
+    pinch?: boolean;
+  }
+
+  export interface HandleScrollOptions {
+    mouseWheel?: boolean;
+    pressedMouseMove?: boolean;
+    horzTouchDrag?: boolean;
+    vertTouchDrag?: boolean;
+  }
+
+  export interface LineOptions {
+    width?: number;
+    color?: string;
+    style?: number;
+  }
+
+  export interface CandlestickSeriesOptions {
+    upColor?: string;
+    downColor?: string;
+    borderUpColor?: string;
+    borderDownColor?: string;
+    wickUpColor?: string;
+    wickDownColor?: string;
+    priceFormat?: {
+      type: 'price';
+      precision: number;
+      minMove: number;
+    };
+  }
+
+  export enum ColorType {
+    Solid = 'solid',
+  }
+
+  export interface IChartApi {
+    remove(): void;
+    resize(width: number, height: number): void;
+    timeScale(): ITimeScaleApi;
+    addCandlestickSeries(options?: DeepPartial<CandlestickSeriesOptions>): ISeriesApi<'Candlestick'>;
+    subscribeCrosshairMove(handler: (param: MouseEventParams) => void): void;
+    unsubscribeCrosshairMove(handler: (param: MouseEventParams) => void): void;
+  }
+
+  export interface ITimeScaleApi {
+    setVisibleRange(range: { from: Time; to: Time }): void;
+  }
+
+  export interface ISeriesApi<T extends string> {
+    setData(data: CandlestickData[]): void;
+    update(data: CandlestickData): void;
+  }
+
+  export interface MouseEventParams {
+    time?: Time;
+    point?: { x: number; y: number };
+    seriesData: Map<ISeriesApi<string>, CandlestickData>;
+  }
+
+  export function createChart(container: HTMLElement, options?: DeepPartial<ChartOptions>): IChartApi;
 } 

@@ -23,19 +23,30 @@ import { config } from "@/config";
 // Internal entry functions
 import { mintAsset } from "@/entry-functions/mint_asset";
 
-interface HeroSectionProps {
-  handleImageError: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
-  getSafeImageUrl: (symbol: string) => string;
-}
-
-export const HeroSection: React.FC<HeroSectionProps> = ({ handleImageError, getSafeImageUrl }) => {
+export function HeroSection() {
   const { data } = useGetAssetData();
   const queryClient = useQueryClient();
   const { account, signAndSubmitTransaction } = useWallet();
   const [assetCount, setAssetCount] = useState<string>("10000");
   const [error, setError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
 
   const { asset, userMintBalance = 0, yourBalance = 0, maxSupply = 0, currentSupply = 0 } = data ?? {};
+
+  const getSafeImageUrl = (symbol: string) => {
+    if (imageError) {
+      return '/tokens/default.svg';
+    }
+    try {
+      return `/tokens/${symbol.toLowerCase()}.svg`;
+    } catch {
+      return '/tokens/default.svg';
+    }
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
 
   const mintFA = async (e: FormEvent) => {
     e.preventDefault();
@@ -93,10 +104,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ handleImageError, getS
         <h1 className="title-md">{asset?.name ?? config.defaultAsset?.name}</h1>
         <Socials />
 
-        <Card>
+        <Card className="relative overflow-hidden">
           <CardContent
-            fullPadding
-            className="flex flex-col md:flex-row gap-4 md:justify-between items-start md:items-center"
+            className="flex flex-col md:flex-row gap-4 md:justify-between items-start md:items-center p-6"
           >
             <form onSubmit={mintFA} className="flex flex-col md:flex-row gap-4 w-full md:basis-1/4">
               <Input
@@ -147,7 +157,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ handleImageError, getS
       </div>
     </section>
   );
-};
+}
 
 const AddressButton: FC<{ address: string }> = ({ address }) => {
   const [copied, setCopied] = useState(false);

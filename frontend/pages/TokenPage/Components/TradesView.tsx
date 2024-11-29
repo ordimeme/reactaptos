@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button"
-import { MarketItem } from "@/data/marketData"
+import { MarketItem, Trade } from "@/types/market"
 import { truncateAddress, getFullAddress } from "@/utils/truncateAddress"
 import { Copy } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useState, useRef } from "react"
 import { Pagination } from "@/components/Pagination"
 import { formatRelativeTime } from "@/utils/formatDate"
+import { usePriceContext } from "@/context/PriceContext"
+import { Tag } from "@/components/ui/tag"
 
 interface TradesViewProps {
   token: MarketItem;
@@ -18,6 +20,10 @@ export function TradesView({ token }: TradesViewProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const tradesRef = useRef<HTMLDivElement>(null);
   const totalPages = Math.ceil(token.trades.length / TRADES_PER_PAGE);
+  const { tokenPrices } = usePriceContext();
+  const currentPrice = tokenPrices[token.id] || {
+    close: token.currentPrice.toFixed(2)
+  };
 
   const handleCopyAddress = async (address: string) => {
     try {
@@ -59,7 +65,7 @@ export function TradesView({ token }: TradesViewProps) {
 
   return (
     <div className="-mx-2 sm:mx-0 space-y-4" ref={tradesRef}>
-      {/* 页码信息显示 - 调整内边距 */}
+      {/* 页码信息显示 */}
       <div className="text-sm text-muted-foreground px-4 sm:px-0">
         Showing {startIndex + 1} to {Math.min(startIndex + TRADES_PER_PAGE, token.trades.length)} of {token.trades.length} trades
       </div>
@@ -68,56 +74,56 @@ export function TradesView({ token }: TradesViewProps) {
         <div className="min-w-[600px]">
           <div className="rounded-none sm:rounded-lg border-x-0 sm:border-x border-t border-b border-muted/40 dark:border-muted/20 overflow-hidden">
             {/* 表头 */}
-            <div className="grid grid-cols-[2fr,2fr,1.5fr] gap-0.5 md:gap-2 p-2 md:p-3 text-xs md:text-sm text-muted-foreground bg-muted/5">
-              <div className="pl-4 sm:pl-2">Account</div>
+            <div className="grid grid-cols-4 gap-0.5 md:gap-2 p-2 md:p-3 text-xs md:text-sm text-muted-foreground bg-muted/5">
+              <div className="pl-4 sm:pl-2">Time/Type</div>
+              <div>Account</div>
               <div>Amount</div>
               <div className="text-right pr-4 sm:pr-2">Transaction</div>
             </div>
             
             {/* 交易列表 */}
             <div className="divide-y divide-muted/20">
-              {currentTrades.map((trade, index) => (
+              {currentTrades.map((trade: Trade, index: number) => (
                 <div 
                   key={index} 
-                  className="grid grid-cols-[2fr,2fr,1.5fr] gap-0.5 md:gap-2 p-2 md:p-3 text-xs md:text-sm hover:bg-muted/5 transition-colors"
+                  className="grid grid-cols-4 gap-0.5 md:gap-2 p-2 md:p-3 text-xs md:text-sm hover:bg-muted/5 transition-colors"
                 >
+                  {/* 时间和交易类型 */}
+                  <div className="flex flex-col gap-0.5 pl-4 sm:pl-2 justify-center">
+                    <span className="font-mono text-[10px] md:text-xs text-muted-foreground">
+                      {formatRelativeTime(trade.timestamp)} 
+                      <Tag variant={trade.type === 'buy' ? 'buy' : 'sell'} className="ml-2 w-6">
+                      {trade.type === 'buy' ? 'buy' : 'Sell'}
+                      </Tag>
+                    </span>
+                    
+                  </div>
+
                   {/* 账户地址 */}
-                  <div className="flex items-center gap-0.5 md:gap-1 pl-4 sm:pl-2">
+                  <div className="flex items-center gap-0.5 md:gap-1">
                     <span className="font-mono truncate">
-                      {truncateAddress(trade.account)}
+                      {truncateAddress(trade.trader, 6, 4, true)}
                     </span>
                     <Button 
                       variant="ghost" 
                       size="icon" 
                       className="h-4 w-4 md:h-5 md:w-5 hover:bg-muted"
-                      onClick={() => handleCopyAddress(trade.account)}
+                      onClick={() => handleCopyAddress(trade.trader)}
                     >
                       <Copy className="h-2.5 w-2.5 md:h-3 md:w-3" />
                     </Button>
                   </div>
                   
                   {/* 交易金额 */}
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-0.5">
                     <span className="font-mono">
                       {trade.tokenAmount.toFixed(3)} {token.symbol}
                     </span>
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-muted-foreground">
-                        {trade.aptAmount.toFixed(3)} APT
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {formatRelativeTime(trade.timestamp)}
-                      </span>
-                      <span className={`px-1.5 py-0.5 text-[9px] leading-[10px] font-medium whitespace-pre ${
-                        trade.type === 'buy' 
-                          ? 'bg-green-500/20 text-green-500' 
-                          : 'bg-red-500/20 text-red-500'
-                      }`}>
-                        {trade.type === 'buy' ? 'BUY' : 'SELL'}
-                      </span>
-                    </div>
-                    <span className="font-mono text-xs text-muted-foreground">
-                      ${(trade.aptAmount * token.price).toFixed(2)}
+                    <span className="font-mono text-[10px] md:text-xs text-muted-foreground">
+                      {trade.aptAmount.toFixed(3)} APT
+                    </span>
+                    <span className="font-mono text-[10px] md:text-xs text-muted-foreground">
+                      ${(trade.aptAmount * parseFloat(currentPrice.close)).toFixed(2)}
                     </span>
                   </div>
 
@@ -148,7 +154,7 @@ export function TradesView({ token }: TradesViewProps) {
         </div>
       </div>
 
-      {/* 分页器 - 调整内边距 */}
+      {/* 分页器 */}
       {totalPages > 1 && (
         <div className="px-4 sm:px-0">
           <Pagination

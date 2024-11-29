@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MarketItem } from "@/data/marketData";
+import { MarketItem } from "@/types/market";
 import { TradesView } from "./TradesView";
 import { Comments } from "./Comments";
 import { MessageCircle, BarChart2 } from "lucide-react";

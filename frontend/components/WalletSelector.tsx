@@ -85,7 +85,7 @@ interface ConnectWalletDialogProps {
   close: () => void;
 }
 
-function ConnectWalletDialog({ close }: ConnectWalletDialogProps) {
+export function ConnectWalletDialog({ close }: ConnectWalletDialogProps) {
   const { wallets = [] } = useWallet();
 
   const location = useLocation();

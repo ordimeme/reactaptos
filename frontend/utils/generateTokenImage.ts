@@ -73,7 +73,7 @@ export function generateMissingTokenImages() {
   const outputDir = path.join(process.cwd(), 'public', 'tokens');
   
   marketData.forEach(token => {
-    const imageName = token.imageUrl.split('/').pop();
+    const imageName = token.imageUrl?.toString() || '/tokens/default.svg';
     const imagePath = path.join(outputDir, imageName || '');
     
     // 检查图像是否存在

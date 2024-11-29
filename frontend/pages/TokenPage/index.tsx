@@ -1,4 +1,4 @@
-import { useState, useContext, useCallback } from "react";
+import { useState, useContext, useCallback, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { marketData } from "@/data/marketData";
 import { TokenInfo } from "./Components/TokenInfo";
@@ -11,23 +11,41 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import { TradesView } from "./Components/TradesView";
-import { ChartView, PriceData } from "./Components/ChartView";
+import { ChartView } from "./Components/ChartView";
+import { PriceData } from "@/types/market";
 import { useToast } from "@/components/ui/use-toast";
 import { truncateAddress, getFullAddress } from "@/utils/truncateAddress";
 import { Comments } from "./Components/Comments";
+import { usePriceContext } from "@/context/PriceContext";
+
+// 添加价格格式化函数
+const formatPrice = (price: string | number): string => {
+  const num = typeof price === 'string' ? parseFloat(price) : price;
+  const formatted = num.toFixed(4);
+  return formatted.replace(/\.?0+$/, ''); // 移除末尾的零
+};
 
 export default function TokenPage() {
   const { toast } = useToast();
   const { theme } = useContext(ThemeContext);
   const { id } = useParams();
-  
+  const token = marketData.find(item => item.id === id);
+  const { initializePrice } = usePriceContext();
+
+  // 确保在组件挂载时初始化价格
+  useEffect(() => {
+    if (token) {
+      console.log('Initializing price for token:', token.id);
+      initializePrice(token);
+    }
+  }, [token, initializePrice]);
+
   // 评论相关状态
   const [commentContent, setCommentContent] = useState("");
   const [activeTab, setActiveTab] = useState<"comments" | "trades">("comments");
   
   // 交易相关状态
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
-  const [tokenType, setTokenType] = useState<"APT" | "APT">("APT");
   const [amount, setAmount] = useState<string>("");
   
   // 滑点设置相关状态
@@ -36,15 +54,25 @@ export default function TokenPage() {
   const [enableFrontRunning, setEnableFrontRunning] = useState(true);
   const [priorityFee, setPriorityFee] = useState<string>("0.01");
 
-  // 添加移动端导航状态
+  // 移动端导航状态
   const [mobileTab, setMobileTab] = useState<"buy/sell" | "info" | "txs">("buy/sell");
 
-  // 添加钱包相关状态
-  const [isWalletConnected, setIsWalletConnected] = useState(false);
-  const [aptBalance, setAptBalance] = useState(0);
-  const [tokenBalance, setTokenBalance] = useState(0);
+  // 钱包相关状态
+  const [aptBalance, _setAptBalance] = useState<number>(0);
+  const [tokenBalance, _setTokenBalance] = useState<number>(0);
 
-  const token = marketData.find(item => item.id === id);
+  // 添加响应式状态
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
+  // 添加响应式监听
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!token) {
     return <div className="container mx-auto px-4 py-8">Token not found</div>;
@@ -57,11 +85,6 @@ export default function TokenPage() {
     } catch (error) {
       return '/tokens/default.svg';
     }
-  };
-
-  // Reset 功能
-  const handleReset = () => {
-    setAmount("");
   };
 
   // 提交评论
@@ -93,15 +116,15 @@ export default function TokenPage() {
 
   // 在组件顶部添加price状态
   const [currentPrice, setCurrentPrice] = useState<PriceData>({
-    open: token?.price.toFixed(2) || '0.00',
-    high: token?.price.toFixed(2) || '0.00',
-    low: token?.price.toFixed(2) || '0.00',
-    close: token?.price.toFixed(2) || '0.00',
+    open: formatPrice(token?.currentPrice || 0),
+    high: formatPrice(token?.currentPrice || 0),
+    low: formatPrice(token?.currentPrice || 0),
+    close: formatPrice(token?.currentPrice || 0),
     time: new Date().toLocaleString('en-US', { 
       timeZone: 'Asia/Shanghai',
       hour12: false 
     }),
-    price24h: token?.price.toFixed(2) || '0.00',
+    price24h: formatPrice(token?.currentPrice || 0),
     time24h: new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleString('en-US', {
       timeZone: 'Asia/Shanghai',
       hour12: false
@@ -112,6 +135,7 @@ export default function TokenPage() {
 
   // 修改handlePriceUpdate函数
   const handlePriceUpdate = useCallback((newPrice: PriceData) => {
+    console.log('TokenPage price update:', newPrice); // 添加日志
     setCurrentPrice(newPrice);
   }, []);
 
@@ -120,14 +144,6 @@ export default function TokenPage() {
     // 如果不需要处理 hover 价格变化，可以保留一个空函数
   }, []);
 
-  // 添加连接钱包处理函数
-  const handleConnectWallet = useCallback(() => {
-    // 这里添加实际的钱包连接逻辑
-    setIsWalletConnected(true);
-    // 模拟余额，实际应该从钱包获取
-    setAptBalance(1234.5678);
-    setTokenBalance(987654.321);
-  }, []);
 
   // 渲染移动端内容
   const renderMobileContent = () => {
@@ -147,16 +163,11 @@ export default function TokenPage() {
                 ...token,
                 imageUrl: getSafeImageUrl(token.symbol)
               }}
+              currentPrice={currentPrice}
               tradeType={tradeType}
-              tokenType={tokenType}
               amount={amount}
               setTradeType={setTradeType}
-              setTokenType={setTokenType}
               setAmount={setAmount}
-              handleReset={handleReset}
-              setIsSlippageDialogOpen={setIsSlippageDialogOpen}
-              isWalletConnected={isWalletConnected}
-              onConnectWallet={handleConnectWallet}
               aptBalance={aptBalance}
               tokenBalance={tokenBalance}
             />
@@ -191,10 +202,10 @@ export default function TokenPage() {
 
   return (
     <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 pb-[140px] lg:pb-8">
-      {/* Token Info Card - 使用最新价格 */}
+      {/* Token Info Card */}
       <Card className="border-muted/40 dark:border-muted/20 mb-4 sm:mb-8">
         <CardHeader className="flex flex-col gap-4 p-3 sm:p-6">
-          {/* 顶部区域：图标和价格 */}
+          {/* 顶部区域：图标和格 */}
           <div className="flex items-start justify-between gap-3">
             {/* 左侧图标和名称 */}
             <div className="flex gap-3 items-center">
@@ -223,38 +234,36 @@ export default function TokenPage() {
             {/* 右侧价格信息 */}
             <div className="text-right flex-shrink-0">
               <p className="text-lg sm:text-xl md:text-2xl font-bold">
-                ${currentPrice.close}
+                ${formatPrice(currentPrice.close)}
               </p>
-              <p className={`text-xs sm:text-sm ${
-                parseFloat(currentPrice.change24h) >= 0 ? "text-green-500" : "text-red-500"
-              }`}>
-                ({parseFloat(currentPrice.change24h) >= 0 ? "+" : ""}
-                {currentPrice.change24h}% 24h)
-              </p>
+              <div className="flex items-center justify-end gap-2">
+                <p className={`text-xs sm:text-sm ${
+                  parseFloat(currentPrice.change24h) >= 0 ? "text-green-500" : "text-red-500"
+                }`}>
+                  ({parseFloat(currentPrice.change24h) >= 0 ? "+" : ""}
+                  {currentPrice.change24h}% 24h)
+                </p>
+              </div>
             </div>
-
-
           </div>
 
           {/* 底部区域：合约地址和创建者地址 */}
-          <div className="flex flex-row md:flex-col gap-2 md:gap-3">
-            {/* Contract 地址 */}
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <div className="flex flex-col gap-2">
+            {/* Contract Address */}
+            <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                <span className="hidden md:inline">Contract Address:</span>
-                <span className="md:hidden">CA:</span>
+                {isMobile ? "CA:" : "Contract:"}
               </span>
-              <div className="flex items-center gap-0 flex-1 min-w-0">
-                <div className="flex items-center flex-1 min-w-0">
-                  <span className="text-xs font-mono truncate md:text-sm">
-                    <span className="md:hidden">{truncateAddress(token.creator)}</span>
-                    <span className="hidden md:inline">{getFullAddress(token.creator)}</span>
+              <div className="flex items-center flex-1 min-w-0">
+                <div className="flex items-center min-w-0 flex-1">
+                  <span className="text-xs font-mono truncate">
+                    {truncateAddress(token.contractAddress, 6, 4, isMobile)}
                   </span>
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-6 w-6 hover:bg-muted/50 shrink-0 ml-0.5"
-                    onClick={() => handleCopyCA(token.creator)}
+                    className="h-5 w-5 hover:bg-muted/50 ml-2"
+                    onClick={() => handleCopyCA(token.contractAddress)}
                   >
                     <Copy className="h-3 w-3" />
                   </Button>
@@ -262,22 +271,20 @@ export default function TokenPage() {
               </div>
             </div>
 
-            {/* Creator 地址 - 移动端右对齐 */}
-            <div className="flex items-center gap-1.5 flex-1 min-w-0 md:justify-start justify-end">
-              <div className="flex items-center gap-0 flex-1 min-w-0 justify-end md:justify-start">
-                <div className="flex items-center min-w-0 justify-end md:justify-start">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap mr-1.5">
-                    <span className="hidden md:inline">Creator Address:</span>
-                    <span className="md:hidden">CR:</span>
-                  </span>
-                  <span className="text-xs font-mono truncate md:text-sm">
-                    <span className="md:hidden">{truncateAddress(token.creator)}</span>
-                    <span className="hidden md:inline">{getFullAddress(token.creator)}</span>
+            {/* Creator Address */}
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                {isMobile ? "CR:" : "Creator:"}
+              </span>
+              <div className="flex items-center flex-1 min-w-0">
+                <div className="flex items-center min-w-0 flex-1">
+                  <span className="text-xs font-mono truncate">
+                    {truncateAddress(token.creator, 6, 4, isMobile)}
                   </span>
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-6 w-6 hover:bg-muted/50 shrink-0 ml-0.5"
+                    className="h-5 w-5 hover:bg-muted/50 ml-2"
                     onClick={() => handleCopyCA(token.creator)}
                   >
                     <Copy className="h-3 w-3" />
@@ -316,16 +323,11 @@ export default function TokenPage() {
               ...token,
               imageUrl: getSafeImageUrl(token.symbol)
             }}
+            currentPrice={currentPrice}
             tradeType={tradeType}
-            tokenType={tokenType}
             amount={amount}
             setTradeType={setTradeType}
-            setTokenType={setTokenType}
             setAmount={setAmount}
-            handleReset={handleReset}
-            setIsSlippageDialogOpen={setIsSlippageDialogOpen}
-            isWalletConnected={isWalletConnected}
-            onConnectWallet={handleConnectWallet}
             aptBalance={aptBalance}
             tokenBalance={tokenBalance}
           />

@@ -1,4 +1,4 @@
-import { MarketItem } from "@/data/marketData"
+import { MarketItem, PriceData } from "@/types/market"
 import { Copy, MessageCircle } from "lucide-react"
 import { Button } from "./ui/button"
 import { useState } from "react"
@@ -6,14 +6,23 @@ import { truncateAddress, getFullAddress } from "@/utils/truncateAddress"
 import { useToast } from "./ui/use-toast"
 import { ProgressRing } from "./ProgressRing"
 import { formatRelativeTime } from "@/utils/formatDate"
+import { usePriceContext } from "@/context/PriceContext"
 
 interface CardProps {
-  item: MarketItem
+  item: MarketItem;
+  price?: PriceData;
 }
 
-const Card = ({ item }: CardProps) => {
+const Card = ({ item, price }: CardProps) => {
   const { toast } = useToast();
   const [imageError, setImageError] = useState(false);
+  const { tokenPrices } = usePriceContext();
+
+  // 使用传入的 price 或从 Context 获取价格
+  const currentPrice = price || tokenPrices[item.id] || {
+    change24h: '0.00',
+    close: item.currentPrice.toFixed(2)
+  };
 
   // 处理复制功能
   const handleCopy = async (e: React.MouseEvent, address: string) => {
@@ -80,8 +89,11 @@ const Card = ({ item }: CardProps) => {
         </div>
         <div className="text-right">
           <p className="font-semibold text-base">MCap: ${item.marketCap.toLocaleString()}</p>
-          <p className={`text-sm ${item.priceChange24h >= 0 ? "text-green-500" : "text-red-500"}`}>
-            ({item.priceChange24h >= 0 ? "+" : ""}{item.priceChange24h.toFixed(2)}% 24h)
+          <p className={`text-sm ${
+            parseFloat(currentPrice.change24h) >= 0 ? "text-green-500" : "text-red-500"
+          }`}>
+            ({parseFloat(currentPrice.change24h) >= 0 ? "+" : ""}
+            {currentPrice.change24h}% 24h)
           </p>
         </div>
       </div>

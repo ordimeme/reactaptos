@@ -1,6 +1,6 @@
 import { RouterProvider, createBrowserRouter, Outlet } from "react-router-dom";
 // Internal pages
-import { Mint } from "@/pages/Mint";
+import MintPage from "@/pages/Mint";
 import Markets from "./pages/MarketsPage";
 import { CreateTokens } from "./pages/CreateTokens";
 import { Header } from "./components/Header";
@@ -9,6 +9,7 @@ import { Stake } from "@/pages/Stake"
 import { CreateFungibleAsset } from "@/pages/CreateFungibleAsset";
 import { MyFungibleAssets } from "@/pages/MyFungibleAssets";
 import TokenPage from "./pages/TokenPage/index";
+import { PriceProvider } from '@/context/PriceContext';
 
 function Layout() {
   return (
@@ -38,7 +39,7 @@ const router = createBrowserRouter([
       },
       {
         path: "mint",
-        element: <Mint />,
+        element: <MintPage />,
       },
       {
         path: "create-asset",
@@ -62,9 +63,11 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <div className="overflow-y-scroll">
-      <RouterProvider router={router} />
-    </div>
+    <PriceProvider>
+      <div className="overflow-y-scroll">
+        <RouterProvider router={router} />
+      </div>
+    </PriceProvider>
   );
 }
 

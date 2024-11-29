@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { MarketItem } from "@/data/marketData";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { MarketItem } from "@/types/market";
+import { ChevronDown, ChevronUp, Copy } from "lucide-react";
 import { useState, useMemo } from "react";
 import { FaDiscord, FaTelegram } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
-import { truncateAddress } from "@/utils/truncateAddress";
+import { truncateAddress, getFullAddress } from "@/utils/truncateAddress";
 import { Pagination } from "@/components/Pagination";
+import { useToast } from "@/components/ui/use-toast";
+import { Tag } from "@/components/ui/tag";
 
 interface TokenInfoProps {
   token: MarketItem & { imageUrl: string };
@@ -22,6 +24,7 @@ interface Holder {
 const HOLDERS_PER_PAGE = 20;
 
 export function TokenInfo({ token }: TokenInfoProps) {
+  const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -70,6 +73,24 @@ export function TokenInfo({ token }: TokenInfoProps) {
     return holders.slice(startIndex, endIndex);
   };
 
+  // 添加复制地址函数
+  const handleCopyAddress = async (address: string) => {
+    try {
+      await navigator.clipboard.writeText(getFullAddress(address));
+      toast({
+        title: "Success",
+        description: "Address has been copied to clipboard",
+      });
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      toast({
+        title: "Failed",
+        description: "Failed to copy address",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Holder Distribution 表格渲染函数
   const renderHolderDistribution = () => (
     <div className="space-y-2">
@@ -85,12 +106,6 @@ export function TokenInfo({ token }: TokenInfoProps) {
       </div>
 
       <div className="rounded-lg border border-muted/40 dark:border-muted/20 overflow-hidden">
-        {/* Table Header */}
-        <div className="grid grid-cols-[2fr,1.5fr,1fr] gap-4 py-3 px-4 text-xs font-medium text-muted-foreground bg-muted/5">
-          <div>Holder</div>
-          <div className="text-right">Balance</div>
-          <div className="text-right">Percentage</div>
-        </div>
 
         {/* Table Body */}
         <div className="divide-y divide-muted/20">
@@ -101,13 +116,19 @@ export function TokenInfo({ token }: TokenInfoProps) {
             >
               {/* Holder Address */}
               <div className="flex items-center gap-2">
-                <span className="font-mono text-sm">
-                  {truncateAddress(holder.address)}
+                <span className="font-mono truncate">
+                  {truncateAddress(holder.address, 6, 4, true)}
                 </span>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-4 w-4 md:h-5 md:w-5 hover:bg-muted"
+                  onClick={() => handleCopyAddress(holder.address)}
+                >
+                  <Copy className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                </Button>
                 {holder.isBondingCurve && (
-                  <span className="px-1 py-0.5 text-[9px] bg-blue-500/10 text-blue-500 border border-blue-500/20">
-                    BC
-                  </span>
+                  <Tag variant="bonding">BC</Tag>
                 )}
               </div>
 
@@ -254,7 +275,7 @@ export function TokenInfo({ token }: TokenInfoProps) {
         <div>
           <div className="flex justify-between mb-2">
             <span className="text-sm text-muted-foreground">
-              King Of The Hill Progress: {token.kingProgress}%
+              King Of The Hill Progress: {token.kingProgress ?? 0}%
             </span>
             <Button 
               variant="ghost" 
@@ -265,17 +286,18 @@ export function TokenInfo({ token }: TokenInfoProps) {
             </Button>
           </div>
           <Progress 
-            value={token.kingProgress} 
+            value={token.kingProgress ?? 0} 
             className="h-2 bg-muted/20"
           />
           <p className="text-sm text-muted-foreground mt-1">
-            Dethrone The Current King At ${token.dethroneCap.toLocaleString()} Market Cap
+            Dethrone The Current King At ${token.dethroneCap?.toLocaleString() ?? '0'} Market Cap
           </p>
         </div>
       </div>
 
       {/* Holder Distribution */}
       {renderHolderDistribution()}
+
     </div>
   );
 } 
