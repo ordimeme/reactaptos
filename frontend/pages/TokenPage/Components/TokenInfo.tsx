@@ -96,11 +96,74 @@ export function TokenInfo({ token }: TokenInfoProps) {
   return (
     <div className="rounded-lg border border-muted/40 dark:border-muted/20 bg-card">
       <div className="p-6 space-y-6">
-        <h2 className="text-lg font-semibold">{token.name} Info</h2>
+        {/* Token Metrics */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Market Cap */}
+          <div className="rounded-lg border border-muted/40 dark:border-muted/20 p-4">
+            <div className="text-sm text-muted-foreground mb-1">Market Cap</div>
+            <div className="font-semibold group/price">
+              <div className="text-lg block group-hover/price:hidden">
+                {format.marketCap(token.marketCap)}
+              </div>
+              <div className="text-lg hidden group-hover/price:block">
+                {format.aptMarketCap(token.marketCap)} APT
+              </div>
+            </div>
+          </div>
 
-                {/* About */}
-                <div>
-          <h3 className="text-sm font-semibold mb-2">About {token.symbol}</h3>
+          {/* Liquidity */}
+          <div className="rounded-lg border border-muted/40 dark:border-muted/20 p-4">
+            <div className="text-sm text-muted-foreground mb-1">Liquidity</div>
+            <div className="text-lg font-semibold">
+              {format.liquidity(aptLiquidity)}
+            </div>
+          </div>
+        </div>
+
+        {/* Pool Info */}
+        {token.poolState && (
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4 p-4 rounded-lg border border-muted/40 dark:border-muted/20">
+            {/* Current Supply */}
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">Current Supply</div>
+              <div className="font-medium">
+                <span className="text-base">{formatDisplayPrice(token.poolState.currentSupply)}</span>
+                <span className="text-sm text-muted-foreground ml-1">{token.symbol}</span>
+              </div>
+            </div>
+
+            {/* Total Supply */}
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">Total Supply</div>
+              <div className="font-medium">
+                <span className="text-base">{formatDisplayPrice(token.poolState.totalSupply)}</span>
+                <span className="text-sm text-muted-foreground ml-1">{token.symbol}</span>
+              </div>
+            </div>
+
+            {/* APT Reserve */}
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">APT Reserve</div>
+              <div className="font-medium">
+                <span className="text-base">{formatDisplayPrice(token.poolState.aptReserve)}</span>
+                <span className="text-sm text-muted-foreground ml-1">APT</span>
+              </div>
+            </div>
+
+            {/* Token Reserve */}
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">Token Reserve</div>
+              <div className="font-medium">
+                <span className="text-base">{formatDisplayPrice(token.poolState.tokenReserve)}</span>
+                <span className="text-sm text-muted-foreground ml-1">{token.symbol}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* About Section */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">About {token.symbol}</h3>
           <div className="relative">
             <p className={`text-sm text-muted-foreground ${!isExpanded ? "line-clamp-4" : ""}`}>
               {token.description}
@@ -121,96 +184,7 @@ export function TokenInfo({ token }: TokenInfoProps) {
               </Button>
             )}
           </div>
-                  {/* Social Links */}
-        {(token.twitter || token.discord || token.telegram) && (
-          <div className="pt-4 border-t border-muted/20">
-            <div className="flex gap-4">
-              {token.twitter && (
-                <a 
-                  href={token.twitter} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-500 hover:underline"
-                >
-                  Twitter
-                </a>
-              )}
-              {token.discord && (
-                <a 
-                  href={token.discord} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-500 hover:underline"
-                >
-                  Discord
-                </a>
-              )}
-              {token.telegram && (
-                <a 
-                  href={token.telegram} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-500 hover:underline"
-                >
-                  Telegram
-                </a>
-              )}
-            </div>
-          </div>
-        )}
         </div>
-        
-        {/* Token Metrics */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Market Cap Card */}
-          <div className="rounded-lg border border-muted/40 dark:border-muted/20 p-3">
-            <div className="text-center mb-1">
-              <span className="text-xs text-muted-foreground">Market Cap</span>
-            </div>
-            <div className="font-semibold text-center group/price">
-              <span className="text-base sm:text-lg block group-hover/price:hidden">
-                {format.marketCap(token.marketCap)}
-              </span>
-              <span className="text-base sm:text-lg hidden group-hover/price:block">
-                {format.aptMarketCap(token.marketCap)} APT
-              </span>
-            </div>
-          </div>
-
-          {/* Liquidity Card */}
-          <div className="rounded-lg border border-muted/40 dark:border-muted/20 p-3">
-            <div className="text-center mb-1">
-              <span className="text-xs text-muted-foreground">Liquidity</span>
-            </div>
-            <div className="font-semibold text-center">
-              <span className="text-base sm:text-lg">
-                {format.liquidity(aptLiquidity)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Pool Info */}
-        {token.poolState && (
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Current Supply</p>
-              <p className="font-medium">{formatDisplayPrice(token.poolState.currentSupply)} {token.symbol}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Total Supply</p>
-              <p className="font-medium">{formatDisplayPrice(token.poolState.totalSupply)} {token.symbol}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">APT Reserve</p>
-              <p className="font-medium">{formatDisplayPrice(token.poolState.aptReserve)} APT</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Token Reserve</p>
-              <p className="font-medium">{formatDisplayPrice(token.poolState.tokenReserve)} {token.symbol}</p>
-            </div>
-          </div>
-        )}
 
         {/* Progress Bars */}
         <div className="space-y-4">
@@ -334,6 +308,45 @@ export function TokenInfo({ token }: TokenInfoProps) {
             )}
           </div>
         </div>
+
+        {/* Social Links */}
+        {(token.twitter || token.discord || token.telegram) && (
+          <div className="pt-4 border-t border-muted/20">
+            <h3 className="text-sm font-medium mb-2">Social Links</h3>
+            <div className="flex gap-4">
+              {token.twitter && (
+                <a 
+                  href={token.twitter} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-500 hover:underline"
+                >
+                  Twitter
+                </a>
+              )}
+              {token.discord && (
+                <a 
+                  href={token.discord} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-500 hover:underline"
+                >
+                  Discord
+                </a>
+              )}
+              {token.telegram && (
+                <a 
+                  href={token.telegram} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-500 hover:underline"
+                >
+                  Telegram
+                </a>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
